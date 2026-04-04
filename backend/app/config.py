@@ -7,14 +7,16 @@ and scientific computing. FastAPI provides async support, automatic
 OpenAPI docs, and Pydantic type safety - critical for medical data.
 """
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
-    APP_NAME: str = "Lazarus Medical Forensic Recovery System"
+    APP_NAME: str = "St. Jude ICU Digital Twin API"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
 
@@ -45,4 +47,20 @@ class Settings(BaseSettings):
 
     WS_HEARTBEAT_INTERVAL: int = 30
     WS_POLL_INTERVAL_SECONDS: int = 2
+    ICU_BED_CAPACITY: int = 12
+    OPS_TIMELINE_LIMIT: int = 18
+    SIMULATOR_INTERVAL_SECONDS: float = 5.0
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def normalize_debug_flag(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"release", "prod", "production", "false", "0", "off"}:
+                return False
+            if normalized in {"debug", "development", "dev", "true", "1", "on"}:
+                return True
+        return value
+
+
 settings = Settings()

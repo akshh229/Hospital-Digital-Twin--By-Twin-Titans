@@ -17,7 +17,7 @@ export default function AlertBanner() {
           </div>
           <div className="flex-1">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-lazarus-critical/70">
-              Active escalation queue
+              Command alerts
             </p>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
             {alerts.map((alert, index) => (

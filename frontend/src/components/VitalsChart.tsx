@@ -49,10 +49,10 @@ export default function VitalsChart({ data, title, showBpm = true, showOxygen = 
     <div className="card chart-shell">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="section-label">Recovered telemetry</p>
+          <p className="section-label">Telemetry lane</p>
           {title && <h3 className="mt-2 font-display text-[2rem] leading-none tracking-[-0.03em] text-lazarus-text">{title}</h3>}
           <p className="mt-3 text-sm text-lazarus-muted">
-            Streaming decoded BPM with reconstructed oxygen continuity across dropped frames.
+            Streaming bedside vitals with continuity cues for command-center and patient-level review.
           </p>
         </div>
         {latestPoint && (

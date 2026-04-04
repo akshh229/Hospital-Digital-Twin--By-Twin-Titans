@@ -5,6 +5,7 @@ import { useVitals } from '../hooks/useVitals'
 import { usePrescriptions } from '../hooks/usePrescriptions'
 import { usePatientRealtime } from '../hooks/usePatientRealtime'
 import PatientAlertPanel from '../components/PatientAlertPanel'
+import PatientCommandSnapshot from '../components/PatientCommandSnapshot'
 import RealtimeStatusBadge from '../components/RealtimeStatusBadge'
 import TelemetrySimulatorPanel from '../components/TelemetrySimulatorPanel'
 import VitalsChart from '../components/VitalsChart'
@@ -53,7 +54,7 @@ export default function PatientDetail() {
         to="/"
         className="inline-flex items-center gap-2 rounded-full border border-lazarus-border bg-lazarus-surface/92 px-4 py-2 text-sm font-semibold text-lazarus-info transition-transform duration-300 hover:-translate-x-1 hover:bg-lazarus-surface-high"
       >
-        &larr; Back to Dashboard
+        &larr; Back to Command Center
       </Link>
 
       <div
@@ -67,7 +68,7 @@ export default function PatientDetail() {
       >
         <div className="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0 flex-1 max-w-3xl">
-            <p className="display-kicker">Case dossier</p>
+            <p className="display-kicker">Patient drill-down</p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <h1 className="font-display text-[2.6rem] leading-none tracking-[-0.04em] text-lazarus-text sm:text-[3.4rem]">
                 {patient.name || `Patient ${patient.patient_raw_id}`}
@@ -83,8 +84,8 @@ export default function PatientDetail() {
               />
             </div>
             <p className="mt-5 max-w-2xl text-base leading-7 text-lazarus-muted">
-              Continuous telemetry, reconciled identity mapping, and decrypted medication
-              history in a single patient recovery workspace.
+              Continuous telemetry, routed bed context, and medication activity for the
+              patient view behind the ICU command center.
             </p>
             <div className="mt-7 flex flex-wrap gap-2">
               <span className="dossier-chip">Age {patient.age}</span>
@@ -97,6 +98,7 @@ export default function PatientDetail() {
                   ? `${(patient.identity_confidence * 100).toFixed(0)}%`
                   : 'N/A'}
               </span>
+              <span className="dossier-chip">Telemetry lane active</span>
               {lastMessageAt && (
                 <span className="dossier-chip">
                   Last signal{' '}
@@ -156,6 +158,7 @@ export default function PatientDetail() {
       </div>
 
       {patientId && <PatientAlertPanel patientId={patientId} />}
+      {patientId && <PatientCommandSnapshot patientId={patientId} />}
       {patientId && (
         <TelemetrySimulatorPanel
           patientId={patientId}
@@ -176,7 +179,7 @@ export default function PatientDetail() {
                   : ''
             }
           >
-            <VitalsChart data={vitals.data} title="Vitals integrity monitor" />
+            <VitalsChart data={vitals.data} title="Patient telemetry lane" />
           </div>
         ) : (
           <div className="card text-lazarus-muted">No vitals data available for this patient.</div>

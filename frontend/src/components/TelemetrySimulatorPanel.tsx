@@ -74,10 +74,10 @@ export default function TelemetrySimulatorPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-lazarus-text">
-            Developer Telemetry Simulator
+            QA telemetry injector
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-lazarus-muted">
-            Inject one vitals sample for demos and QA without touching the database manually.
+            Inject one bedside sample for local QA without editing the database manually.
           </p>
         </div>
         <span className="rounded-full bg-lazarus-surface-low px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-lazarus-warning ring-1 ring-lazarus-warning/20">

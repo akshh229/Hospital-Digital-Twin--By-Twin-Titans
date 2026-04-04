@@ -37,10 +37,10 @@ export default function PatientAlertPanel({ patientId }: PatientAlertPanelProps)
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-lazarus-text">
-              Active Alert
+              Active escalation
             </h2>
             <p className="mt-1 text-sm text-lazarus-muted">
-              Clinician acknowledgement and current alert state.
+              Current command-state alert with acknowledgement controls.
             </p>
           </div>
           {activeAlert ? (
@@ -84,10 +84,10 @@ export default function PatientAlertPanel({ patientId }: PatientAlertPanelProps)
                 <ShieldCheck className="mt-0.5 text-lazarus-warning" size={18} />
                 <div>
                   <p className="text-sm font-semibold text-lazarus-text">
-                    Alert acknowledgement available
+                    Escalation acknowledgement available
                   </p>
                   <p className="text-sm text-lazarus-muted">
-                    Mark this alert as reviewed to clear it from the active queue.
+                    Mark this event as reviewed to clear it from the live escalation queue.
                   </p>
                 </div>
               </div>
@@ -110,8 +110,8 @@ export default function PatientAlertPanel({ patientId }: PatientAlertPanelProps)
               No active critical alert for this patient.
             </p>
             <p className="mt-2 text-sm text-lazarus-muted">
-              The realtime monitor is still active and will surface a new alert here if the
-              patient crosses the abnormal threshold.
+              The live monitor is still active and will surface a new escalation here if the
+              patient crosses the configured threshold.
             </p>
           </div>
         )}
@@ -120,10 +120,10 @@ export default function PatientAlertPanel({ patientId }: PatientAlertPanelProps)
       <section className="card">
         <div className="mb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-lazarus-text">
-            Alert Timeline
+            Escalation timeline
           </h2>
           <p className="mt-1 text-sm text-lazarus-muted">
-            Recent closed alerts for quick forensic review.
+            Recent closed escalation events for fast command-room review.
           </p>
         </div>
 

@@ -4,47 +4,47 @@
 
 :root,
 :root[data-theme='clinical-light'] {
-  --color-lazarus-bg: 244 246 248;
-  --color-lazarus-surface-low: 238 243 247;
-  --color-lazarus-surface: 255 255 255;
-  --color-lazarus-surface-high: 248 251 253;
-  --color-lazarus-border: 215 222 230;
-  --color-lazarus-text: 24 33 43;
-  --color-lazarus-muted: 96 117 138;
-  --color-lazarus-critical: 216 92 92;
-  --color-lazarus-warning: 185 133 59;
-  --color-lazarus-normal: 47 155 115;
-  --color-lazarus-info: 107 132 160;
-  --color-lazarus-accent: 79 109 138;
-  --pulse-critical-start: rgba(255, 247, 247, 0.98);
-  --pulse-critical-mid: rgba(252, 236, 236, 0.98);
-  --badge-throb-shadow: 0 0 20px rgba(216, 92, 92, 0.18);
-  --live-dot-shadow-start: 0 0 0 0 rgba(47, 155, 115, 0.22);
-  --live-dot-shadow-mid: 0 0 0 8px rgba(47, 155, 115, 0);
-  --shell-flash-glow: 0 0 0 1px rgba(79, 109, 138, 0.22), 0 0 32px rgba(79, 109, 138, 0.14);
-  --critical-shell-flash-glow: 0 0 0 1px rgba(216, 92, 92, 0.28), 0 0 38px rgba(216, 92, 92, 0.16);
+  --color-lazarus-bg: 236 254 255;
+  --color-lazarus-surface-low: 228 247 249;
+  --color-lazarus-surface: 249 254 255;
+  --color-lazarus-surface-high: 238 250 252;
+  --color-lazarus-border: 174 215 221;
+  --color-lazarus-text: 22 78 99;
+  --color-lazarus-muted: 88 111 124;
+  --color-lazarus-critical: 220 98 85;
+  --color-lazarus-warning: 191 140 63;
+  --color-lazarus-normal: 5 150 105;
+  --color-lazarus-info: 8 145 178;
+  --color-lazarus-accent: 34 211 238;
+  --pulse-critical-start: rgba(255, 247, 244, 0.98);
+  --pulse-critical-mid: rgba(255, 237, 233, 0.98);
+  --badge-throb-shadow: 0 0 20px rgba(220, 98, 85, 0.18);
+  --live-dot-shadow-start: 0 0 0 0 rgba(5, 150, 105, 0.24);
+  --live-dot-shadow-mid: 0 0 0 8px rgba(5, 150, 105, 0);
+  --shell-flash-glow: 0 0 0 1px rgba(8, 145, 178, 0.24), 0 0 32px rgba(34, 211, 238, 0.16);
+  --critical-shell-flash-glow: 0 0 0 1px rgba(220, 98, 85, 0.3), 0 0 38px rgba(220, 98, 85, 0.16);
 }
 
 :root[data-theme='navy'] {
-  --color-lazarus-bg: 13 21 34;
-  --color-lazarus-surface-low: 17 28 44;
-  --color-lazarus-surface: 21 34 54;
-  --color-lazarus-surface-high: 29 46 71;
-  --color-lazarus-border: 43 58 79;
-  --color-lazarus-text: 234 240 247;
-  --color-lazarus-muted: 148 168 191;
-  --color-lazarus-critical: 242 109 109;
-  --color-lazarus-warning: 240 181 108;
-  --color-lazarus-normal: 111 208 163;
-  --color-lazarus-info: 157 184 214;
-  --color-lazarus-accent: 127 167 201;
-  --pulse-critical-start: rgba(46, 23, 28, 0.96);
-  --pulse-critical-mid: rgba(67, 31, 37, 0.98);
-  --badge-throb-shadow: 0 0 24px rgba(242, 109, 109, 0.22);
-  --live-dot-shadow-start: 0 0 0 0 rgba(111, 208, 163, 0.28);
-  --live-dot-shadow-mid: 0 0 0 8px rgba(111, 208, 163, 0);
-  --shell-flash-glow: 0 0 0 1px rgba(127, 167, 201, 0.24), 0 0 36px rgba(127, 167, 201, 0.16);
-  --critical-shell-flash-glow: 0 0 0 1px rgba(242, 109, 109, 0.3), 0 0 40px rgba(242, 109, 109, 0.18);
+  --color-lazarus-bg: 8 26 34;
+  --color-lazarus-surface-low: 11 37 48;
+  --color-lazarus-surface: 14 46 59;
+  --color-lazarus-surface-high: 19 60 76;
+  --color-lazarus-border: 41 88 101;
+  --color-lazarus-text: 226 248 250;
+  --color-lazarus-muted: 146 185 192;
+  --color-lazarus-critical: 247 133 116;
+  --color-lazarus-warning: 240 188 100;
+  --color-lazarus-normal: 74 222 128;
+  --color-lazarus-info: 103 232 249;
+  --color-lazarus-accent: 45 212 191;
+  --pulse-critical-start: rgba(61, 28, 22, 0.96);
+  --pulse-critical-mid: rgba(84, 39, 31, 0.98);
+  --badge-throb-shadow: 0 0 24px rgba(247, 133, 116, 0.22);
+  --live-dot-shadow-start: 0 0 0 0 rgba(74, 222, 128, 0.28);
+  --live-dot-shadow-mid: 0 0 0 8px rgba(74, 222, 128, 0);
+  --shell-flash-glow: 0 0 0 1px rgba(103, 232, 249, 0.24), 0 0 36px rgba(45, 212, 191, 0.16);
+  --critical-shell-flash-glow: 0 0 0 1px rgba(247, 133, 116, 0.3), 0 0 40px rgba(247, 133, 116, 0.18);
 }
 
 html {
@@ -56,15 +56,15 @@ html {
 }
 
 body {
-  font-family: 'Manrope', system-ui, sans-serif;
+  font-family: 'Fira Sans', system-ui, sans-serif;
   background-color: rgb(var(--color-lazarus-bg));
   color: rgb(var(--color-lazarus-text));
   margin: 0;
   min-height: 100vh;
   background-image:
-    radial-gradient(circle at 12% 12%, rgba(79, 109, 138, 0.16), transparent 0 22%),
-    radial-gradient(circle at 88% 8%, rgba(107, 132, 160, 0.1), transparent 0 20%),
-    linear-gradient(180deg, #fbfcfe 0%, #f4f6f8 46%, #edf2f6 100%);
+    radial-gradient(circle at 12% 12%, rgba(34, 211, 238, 0.18), transparent 0 22%),
+    radial-gradient(circle at 88% 8%, rgba(5, 150, 105, 0.1), transparent 0 20%),
+    linear-gradient(180deg, #f7feff 0%, #eefbfc 46%, #e4f7f9 100%);
 }
 
 body::before,
@@ -96,7 +96,7 @@ body::after {
 }
 
 .font-mono {
-  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-family: 'Fira Code', Consolas, monospace;
   font-variant-numeric: tabular-nums;
 }
 
@@ -325,9 +325,9 @@ body::after {
 
 :root[data-theme='navy'] body {
   background-image:
-    radial-gradient(circle at 14% 14%, rgba(127, 167, 201, 0.18), transparent 0 24%),
-    radial-gradient(circle at 84% 10%, rgba(157, 184, 214, 0.1), transparent 0 22%),
-    linear-gradient(180deg, #10192a 0%, #0d1522 42%, #09111c 100%);
+    radial-gradient(circle at 14% 14%, rgba(103, 232, 249, 0.18), transparent 0 24%),
+    radial-gradient(circle at 84% 10%, rgba(45, 212, 191, 0.12), transparent 0 22%),
+    linear-gradient(180deg, #0d242d 0%, #091a22 42%, #071117 100%);
 }
 
 :root[data-theme='navy'] body::before {

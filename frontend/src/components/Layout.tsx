@@ -4,7 +4,10 @@ import AlertBanner from './AlertBanner'
 import RealtimeStatusBadge from './RealtimeStatusBadge'
 import ThemeToggle from './ThemeToggle'
 import { useHealth } from '../hooks/useHealth'
-import { useOverviewRealtime } from '../hooks/useOverviewRealtime'
+import {
+  useOperationsOverview,
+  useOperationsRealtime,
+} from '../hooks/useOperations'
 
 interface LayoutProps {
   children: ReactNode
@@ -12,8 +15,9 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { connectionState: realtimeState, retryAttempt: realtimeRetryAttempt } =
-    useOverviewRealtime()
+    useOperationsRealtime()
   const { data: health, isLoading, isError } = useHealth()
+  const { data: overview } = useOperationsOverview()
   const systemStatus = isError ? 'API offline' : isLoading ? 'Checking API' : 'API healthy'
   const statusTone = isError ? 'bg-lazarus-critical' : 'bg-lazarus-normal'
 
@@ -24,15 +28,17 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <Link to="/" className="flex min-w-0 items-center gap-4">
               <div className="brand-mark flex h-12 w-12 items-center justify-center rounded-[1.15rem] border border-lazarus-border">
-                <span className="font-mono text-lg font-semibold text-lazarus-text">L</span>
+                <span className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-lazarus-text">
+                  ICU
+                </span>
               </div>
               <div className="min-w-0">
-                <p className="display-kicker">Forensic telemetry board</p>
+                <p className="display-kicker">Hospital digital twin</p>
                 <h1 className="font-display text-[2rem] leading-none tracking-[-0.03em] text-lazarus-text">
-                  Lazarus
+                  St. Jude ICU
                 </h1>
                 <p className="mt-1 text-sm text-lazarus-muted">
-                  Medical forensic recovery
+                  Command center and live crisis simulation
                 </p>
               </div>
             </Link>
@@ -42,12 +48,21 @@ export default function Layout({ children }: LayoutProps) {
                 St. Jude&apos;s Research Hospital
               </p>
               <p className="mt-1 text-xs uppercase tracking-[0.24em] text-lazarus-muted/70">
-                Critical care observability workspace
+                Critical care logistics and ward allocation twin
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+            {overview && (
+              <>
+                <span className="dossier-chip">
+                  Occupancy {overview.summary.icu_occupied}/{overview.summary.icu_capacity}
+                </span>
+                <span className="dossier-chip">Overflow {overview.summary.overflow_patients}</span>
+                <span className="dossier-chip">Alerts {overview.summary.active_alerts}</span>
+              </>
+            )}
             <ThemeToggle />
             <RealtimeStatusBadge
               state={realtimeState}

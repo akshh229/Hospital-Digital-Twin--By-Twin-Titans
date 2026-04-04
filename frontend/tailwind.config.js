@@ -21,9 +21,9 @@ export default {
         'lazarus-accent': 'rgb(var(--color-lazarus-accent) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['Manrope', 'system-ui', 'sans-serif'],
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
-        mono: ['IBM Plex Mono', 'Consolas', 'monospace'],
+        sans: ['Fira Sans', 'system-ui', 'sans-serif'],
+        display: ['Fira Sans', 'system-ui', 'sans-serif'],
+        mono: ['Fira Code', 'Consolas', 'monospace'],
       },
       boxShadow: {
         'glow-critical': '0 0 15px rgba(239, 68, 68, 0.3)',

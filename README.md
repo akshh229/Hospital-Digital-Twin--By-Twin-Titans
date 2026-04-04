@@ -1,6 +1,6 @@
 <div align="center">
-  <h1>🏥 Lazarus Medical Forensic Recovery Dashboard</h1>
-  <p><strong>St. Jude's Research Hospital - Emergency Data Recovery System</strong></p>
+  <h1>🏥 St. Jude ICU Digital Twin Command Center</h1>
+  <p><strong>Lazarus Round 2 - Hospital Operations Digital Twin</strong></p>
   <p><em>Built by <strong>Team Twin Titan</strong> for <strong>The Rosetta Code Hackathon</strong> @ <strong>NIT, Hamirpur</strong></em></p>
 
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi"/>
@@ -14,11 +14,12 @@
 
 ## 🏥 Project Overview
 
-Lazarus is an end-to-end medical forensic recovery dashboard designed to reconstruct patient data after a ransomware attack that:
+Lazarus is now an end-to-end ICU digital twin built on top of the original medical forensic recovery system. It reconstructs patient data after a ransomware attack and turns it into a live command center for operational decisions:
 - Shredded relational database links
 - Scrambled patient identities (colliding IDs distinguished by vital sign parity)
 - Encrypted medication names with age-relative cipher
 - Corrupted sensor telemetry (hex-encoded with missing samples)
+- Live ICU bed routing, resource forecasting, timeline events, and simulator controls
 
 ## 🏗️ Architecture
 
@@ -249,6 +250,12 @@ GET /api/alerts
 GET /api/alerts/history/{patient_id}
   → Alert history for specific patient
 
+GET /api/ops/overview
+  → ICU command center snapshot with bed heatmap, resources, and timeline
+
+POST /api/ops/control
+  → Pause, resume, speed up, reset, or inject crisis scenarios into the twin
+
 GET /health
   → Service health check
 ```
@@ -335,23 +342,25 @@ cd "E:\Project Lazarus"
 # 2. Copy environment file
 copy .env.example .env
 
-# 3. Start all services
-docker compose up -d
+# 3. Start the full local stack
+docker compose up -d --build
 
-# 4. Wait for services to be healthy (30-60 seconds)
+# 4. Wait for services to be healthy
 docker compose ps
 
-# 5. Run database migrations
-docker compose exec backend alembic upgrade head
-
-# 6. Load seed data
-docker compose exec backend python seed_data/load_seeds.py
-
-# 7. Access dashboard
-# Frontend (Docker): http://localhost:3000
+# 5. Access the command center
+# Command center: http://localhost
+# Frontend dev server: http://localhost:3000
 # API Docs: http://localhost:8000/docs
 # Backend Health: http://localhost:8000/health
 ```
+
+The backend now auto-runs:
+- database migrations
+- safe seed bootstrap when the dataset is missing
+- the live simulator as a dedicated Docker service
+
+If you rerun the stack, the seed bootstrap skips automatically once data is already present.
 
 ### Option 2: Local Development
 
@@ -374,7 +383,7 @@ set REDIS_URL=redis://:redis_password_change_me@localhost:6379/0
 alembic upgrade head
 
 # Load seed data
-python seed_data/load_seeds.py
+python -m seed_data.load_seeds
 
 # Start backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -537,11 +546,12 @@ docker compose up -d postgres
 
 **No data on dashboard:**
 ```bash
-# Load seed data
-docker compose exec backend python seed_data/load_seeds.py
+# Check whether bootstrap and the simulator are healthy
+docker compose logs backend
+docker compose logs simulator
 
-# Start live simulator
-docker compose exec backend python app/workers/live_simulator.py
+# Manually rerun the safe seed loader if needed
+docker compose exec backend python -m seed_data.load_seeds
 ```
 
 ## 📚 Implementation Status

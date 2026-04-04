@@ -2,7 +2,7 @@
 Alert Engine - Debounced critical vitals monitoring
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 from sqlalchemy.orm import Session
 from app.models.alerts import PatientAlert
@@ -56,7 +56,7 @@ def process_vitals_for_alerts(patient_id: UUID, bpm: int, oxygen: int, db: Sessi
                 alert = PatientAlert(
                     patient_id=patient_id,
                     status="pending",
-                    opened_at=datetime.utcnow(),
+                    opened_at=datetime.now(UTC),
                     last_bpm=bpm,
                     last_oxygen=oxygen,
                     consecutive_abnormal_count=1,
@@ -70,7 +70,7 @@ def process_vitals_for_alerts(patient_id: UUID, bpm: int, oxygen: int, db: Sessi
 
             if open_alert.consecutive_normal_count >= settings.ALERT_DEBOUNCE_COUNT:
                 open_alert.status = "closed"
-                open_alert.closed_at = datetime.utcnow()
+                open_alert.closed_at = datetime.now(UTC)
 
     db.commit()
 

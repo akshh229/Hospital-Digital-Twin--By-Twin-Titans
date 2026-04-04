@@ -1,10 +1,125 @@
 """Integration tests for API endpoints"""
 
+from datetime import datetime
+from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
 from app.main import app
 from app.database import get_db
+
+
+def make_operations_overview_payload():
+    now = datetime(2026, 4, 5, 9, 0, 0).isoformat()
+    return {
+        "summary": {
+            "total_patients": 14,
+            "icu_capacity": 12,
+            "icu_occupied": 12,
+            "overflow_patients": 2,
+            "active_alerts": 1,
+            "average_risk_score": 54,
+            "attention_patients": 3,
+            "updated_at": now,
+        },
+        "simulation": {
+            "is_paused": False,
+            "speed": 1.0,
+            "active_scenario": "baseline",
+            "crisis_level": 0,
+            "crisis_label": "Nominal operations",
+            "virtual_admissions": 2,
+            "active_interventions": [
+                {
+                    "id": "open-surge-beds",
+                    "label": "Surge beds active",
+                    "value": "+2 beds",
+                    "effect": "Expanded live ICU capacity to absorb overflow demand.",
+                }
+            ],
+            "updated_at": now,
+            "last_action": "apply_intervention",
+        },
+        "briefing": {
+            "headline": "Capacity strain requires intervention",
+            "summary": "The command room is balancing queue relief and reserve protection.",
+            "changes": ["2 patients are waiting beyond the live ICU map."],
+        },
+        "trust": {
+            "telemetry_state": "live",
+            "simulator_status": "running",
+            "data_source": "Live telemetry with simulated crisis overlay",
+            "confidence_label": "high",
+            "confidence_reason": "Telemetry is current.",
+            "last_telemetry_at": now,
+            "telemetry_age_seconds": 5,
+        },
+        "recommended_actions": [
+            {
+                "id": "open-surge-beds",
+                "action_type": "intervention",
+                "control_action": None,
+                "priority": "warning",
+                "title": "Open surge beds or accelerate step-down transfers",
+                "rationale": "Queue pressure exceeds current capacity.",
+                "owner": "Hospital ops lead",
+                "state": "active",
+                "state_label": "2 surge beds active",
+                "state_reason": "Surge capacity is already engaged and can still be expanded by one additional step.",
+                "can_apply": True,
+                "apply_label": "Add 2 more surge beds",
+                "projected_summary": "Projected to release queue pressure within the next 30 minutes.",
+                "projected_window_minutes": 30,
+                "projected_metrics": [
+                    {
+                        "key": "overflow_patients",
+                        "label": "Overflow queue",
+                        "current_value": 2,
+                        "projected_value": 0,
+                        "delta": -2,
+                        "unit": "patients",
+                    }
+                ],
+                "observed_summary": "Observed ICU capacity move from 12 to 14 beds while overflow shifted from 4 to 2.",
+                "observed_metrics": [
+                    {
+                        "key": "icu_capacity",
+                        "label": "ICU capacity",
+                        "baseline_value": 12,
+                        "current_value": 14,
+                        "delta": 2,
+                        "unit": "beds",
+                    }
+                ],
+            }
+        ],
+        "scenario_comparison": {
+            "baseline_label": "Baseline operations",
+            "current_label": "Nominal operations",
+            "summary_metrics": [],
+            "resource_metrics": [],
+        },
+        "replay_frames": [
+            {
+                "id": "current-state",
+                "timestamp": now,
+                "title": "Current command state",
+                "severity": "warning",
+                "phase_label": "Current state",
+                "summary": "Latest reconstructed checkpoint.",
+                "icu_occupied": 12,
+                "overflow_patients": 2,
+                "active_alerts": 1,
+                "attention_patients": 3,
+                "focus_note": "Overflow pressure is the leading issue.",
+            }
+        ],
+        "bed_heatmap": [],
+        "triage_queue": [],
+        "resource_cards": [],
+        "resource_forecast": [],
+        "timeline": [],
+    }
 
 
 @pytest.fixture
@@ -28,7 +143,7 @@ class TestHealthEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["service"] == "lazarus-backend"
+        assert data["service"] == "st-jude-icu-digital-twin-backend"
 
     def test_root_endpoint(self):
         with TestClient(app) as c:
@@ -69,3 +184,104 @@ class TestAlertEndpoints:
         response = client.get("/api/alerts")
         assert response.status_code == 200
         assert response.json() == []
+
+
+class TestOperationsEndpoints:
+    def test_overview_serializes_nested_patient_ids(self, client, mock_db):
+        alert_result = MagicMock()
+        alert_result.mappings.return_value.all.return_value = []
+        mock_db.execute.return_value = alert_result
+
+        patients = [
+            {
+                "patient_id": uuid4(),
+                "patient_raw_id": f"P{i:05d}",
+                "parity_flag": "even",
+                "name": f"Patient {i}",
+                "age": 30 + i,
+                "ward": f"ICU-{(i % 3) + 1}",
+                "last_bpm": 72 + (i % 5),
+                "last_oxygen": 98 - (i % 3),
+                "last_vitals_timestamp": datetime(2026, 4, 4, 12, 0, 0).isoformat(),
+                "quality_flag": "good",
+                "prescription_count": 2,
+                "has_active_alert": i == 1,
+            }
+            for i in range(1, 14)
+        ]
+
+        with patch("app.services.operations_center._load_patients", return_value=patients):
+            with patch(
+                "app.services.operations_center.get_simulation_state",
+                return_value={
+                    "is_paused": False,
+                    "speed": 1.0,
+                    "active_scenario": "baseline",
+                    "crisis_level": 0,
+                    "crisis_label": "Baseline operations",
+                    "virtual_admissions": 0,
+                    "surge_bed_bonus": 2,
+                    "oxygen_reserve_bonus": 0,
+                    "staffing_support_bonus": 0,
+                    "updated_at": datetime(2026, 4, 4, 12, 0, 0).isoformat(),
+                    "last_action": "reset",
+                },
+            ):
+                with patch(
+                    "app.services.operations_center.get_simulation_events",
+                    return_value=[],
+                ):
+                    response = client.get("/api/ops/overview")
+
+        assert response.status_code == 200
+        data = response.json()
+        patient_ids = {str(patient["patient_id"]) for patient in patients}
+        assert len(data["bed_heatmap"]) == 14
+        assert len(data["triage_queue"]) == 0
+        assert "briefing" in data
+        assert "trust" in data
+        assert "recommended_actions" in data
+        assert "scenario_comparison" in data
+        assert "replay_frames" in data
+        assert isinstance(data["recommended_actions"], list)
+        assert data["recommended_actions"][0]["action_type"] in {"intervention", "control", "advisory"}
+        assert data["recommended_actions"][0]["state"] in {
+            "recommended",
+            "active",
+            "saturated",
+            "recently_applied",
+        }
+        assert "projected_metrics" in data["recommended_actions"][0]
+        assert "observed_metrics" in data["recommended_actions"][0]
+        assert data["recommended_actions"][0]["projected_window_minutes"] == 30
+        assert isinstance(data["simulation"]["active_interventions"], list)
+        assert data["simulation"]["active_interventions"][0]["id"] == "open-surge-beds"
+        assert isinstance(data["scenario_comparison"]["summary_metrics"], list)
+        assert isinstance(data["replay_frames"], list)
+        assert data["bed_heatmap"][0]["patient"]["patient_id"] in patient_ids
+        assert isinstance(data["bed_heatmap"][0]["patient"]["risk_reasons"], list)
+        assert data["trust"]["telemetry_state"] in {"live", "watch", "paused"}
+        assert all(
+            event["patient_id"] is None or isinstance(event["patient_id"], str)
+            for event in data["timeline"]
+        )
+
+    def test_control_endpoint_accepts_apply_intervention(self, client):
+        payload = make_operations_overview_payload()
+
+        with patch(
+            "app.api.operations.apply_simulation_action",
+            return_value=payload,
+        ) as apply_action:
+            response = client.post(
+                "/api/ops/control",
+                json={
+                    "action": "apply_intervention",
+                    "intervention_id": "open-surge-beds",
+                },
+            )
+
+        assert response.status_code == 200
+        assert response.json()["simulation"]["last_action"] == "apply_intervention"
+        apply_action.assert_called_once()
+        assert apply_action.call_args.kwargs["intervention_id"] == "open-surge-beds"

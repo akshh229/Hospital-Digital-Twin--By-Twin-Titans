@@ -8,8 +8,8 @@ export default function PharmacyTable({ prescriptions }: PharmacyTableProps) {
   if (!prescriptions || prescriptions.length === 0) {
     return (
       <div className="card">
-        <h3 className="text-sm font-semibold text-lazarus-text mb-4">Pharmacy Portal</h3>
-        <p className="text-lazarus-muted text-sm">No prescriptions found.</p>
+        <h3 className="text-sm font-semibold text-lazarus-text mb-4">Medication execution board</h3>
+        <p className="text-lazarus-muted text-sm">No active medication records found.</p>
       </div>
     )
   }
@@ -19,7 +19,7 @@ export default function PharmacyTable({ prescriptions }: PharmacyTableProps) {
       <div className="mb-5">
         <p className="section-label">Medication ledger</p>
         <h3 className="mt-2 font-display text-[2rem] leading-none tracking-[-0.03em] text-lazarus-text">
-          Pharmacy decryption log
+          Medication schedule view
         </h3>
       </div>
       <div className="space-y-3 md:hidden">
