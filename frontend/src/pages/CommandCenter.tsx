@@ -1,4 +1,5 @@
 import ICUBedHeatmap from '../components/ICUBedHeatmap'
+import IncidentHandoffPanel from '../components/IncidentHandoffPanel'
 import OperationsBriefingPanel from '../components/OperationsBriefingPanel'
 import OperatorActivityPanel from '../components/OperatorActivityPanel'
 import PatientFlowTimeline from '../components/PatientFlowTimeline'
@@ -209,6 +210,7 @@ export default function CommandCenter() {
             simulation={simulation}
             activity={overview.operator_activity}
           />
+          <IncidentHandoffPanel handoff={overview.incident_handoff} />
           <ScenarioPlaybooksPanel
             simulation={simulation}
             isPending={control.isPending}

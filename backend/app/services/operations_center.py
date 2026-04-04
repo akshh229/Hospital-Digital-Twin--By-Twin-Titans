@@ -391,6 +391,169 @@ def _build_operator_activity(state: dict[str, Any]) -> list[dict[str, Any]]:
     return activity
 
 
+def _build_incident_handoff(
+    *,
+    summary: dict[str, Any],
+    simulation: dict[str, Any],
+    trust: dict[str, Any],
+    resource_cards: list[dict[str, Any]],
+    recommended_actions: list[dict[str, Any]],
+    active_interventions: list[dict[str, Any]],
+    operator_activity: list[dict[str, Any]],
+    patients: list[dict[str, Any]],
+) -> dict[str, Any]:
+    generated_at = _utcnow()
+    critical_resources = [card for card in resource_cards if card["status"] == "critical"]
+    warning_resources = [card for card in resource_cards if card["status"] == "warning"]
+    high_risk_patients = [patient for patient in patients if patient["risk_score"] >= 80][:2]
+
+    if summary["overflow_patients"] > 0 or summary["active_alerts"] > 1 or critical_resources:
+        status = "critical"
+        status_label = "Critical pressure"
+    elif (
+        summary["attention_patients"] > 0
+        or warning_resources
+        or trust["telemetry_state"] != "live"
+    ):
+        status = "watch"
+        status_label = "Monitored pressure"
+    else:
+        status = "stable"
+        status_label = "Stable operations"
+
+    summary_text = (
+        f"{simulation['crisis_label']} is currently running with ICU occupancy at "
+        f"{summary['icu_occupied']}/{summary['icu_capacity']} beds, {summary['overflow_patients']} "
+        f"patients in overflow, and {summary['active_alerts']} active telemetry alerts."
+    )
+
+    command_snapshot = [
+        {
+            "key": "icu_occupied",
+            "label": "ICU occupied",
+            "value": f"{summary['icu_occupied']}/{summary['icu_capacity']} beds",
+        },
+        {
+            "key": "overflow_patients",
+            "label": "Overflow queue",
+            "value": f"{summary['overflow_patients']} patients",
+        },
+        {
+            "key": "active_alerts",
+            "label": "Active alerts",
+            "value": f"{summary['active_alerts']}",
+        },
+        {
+            "key": "attention_patients",
+            "label": "Attention set",
+            "value": f"{summary['attention_patients']} patients",
+        },
+    ]
+
+    immediate_risks: list[str] = []
+    if summary["overflow_patients"] > 0:
+        immediate_risks.append(
+            f"{summary['overflow_patients']} patients still exceed live ICU routing capacity."
+        )
+    if summary["active_alerts"] > 0:
+        immediate_risks.append(
+            f"{summary['active_alerts']} telemetry alerts remain open and need bedside attention."
+        )
+    if critical_resources:
+        resource = critical_resources[0]
+        immediate_risks.append(
+            f"{resource['label']} is at {resource['available']}{resource['unit']} and trending {resource['trend']}."
+        )
+    elif warning_resources:
+        resource = warning_resources[0]
+        immediate_risks.append(
+            f"{resource['label']} is under watch at {resource['available']}{resource['unit']}."
+        )
+    if high_risk_patients:
+        patient_names = ", ".join(
+            patient.get("name") or patient["patient_raw_id"] for patient in high_risk_patients
+        )
+        immediate_risks.append(f"Highest-acuity pressure is centered on {patient_names}.")
+    if trust["confidence_label"] != "high":
+        immediate_risks.append(trust["confidence_reason"])
+    if not immediate_risks:
+        immediate_risks.append("No immediate operational risk is currently outside the normal envelope.")
+
+    intervention_lines = [
+        f"{item['label']} ({item['value']}): {item['effect']}" for item in active_interventions
+    ]
+
+    recent_actions = [
+        f"{event['timestamp'].strftime('%H:%M UTC')} | {event['action_label']}"
+        for event in operator_activity[:3]
+    ]
+    if not recent_actions and simulation.get("last_action_label"):
+        last_action_at = simulation.get("last_action_at")
+        if last_action_at:
+            recent_actions.append(
+                f"{_parse_timestamp(last_action_at).strftime('%H:%M UTC')} | {simulation['last_action_label']}"
+            )
+        else:
+            recent_actions.append(simulation["last_action_label"])
+
+    next_steps = [
+        f"{action['title']} (Owner: {action['owner']})"
+        for action in recommended_actions[:3]
+    ]
+    if not next_steps:
+        next_steps.append("Continue monitored ICU routing and preserve current command posture.")
+
+    export_filename = f"icu-incident-handoff-{generated_at.strftime('%Y%m%d-%H%M%S')}"
+
+    markdown_lines = [
+        f"# {simulation['crisis_label']} incident handoff",
+        "",
+        f"Generated: {generated_at.strftime('%Y-%m-%d %H:%M UTC')}",
+        f"Status: {status_label}",
+        "",
+        "## Situation",
+        summary_text,
+        "",
+        "## Command Snapshot",
+    ]
+    markdown_lines.extend(
+        [f"- {metric['label']}: {metric['value']}" for metric in command_snapshot]
+    )
+    markdown_lines.extend(["", "## Immediate Risks"])
+    markdown_lines.extend([f"- {risk}" for risk in immediate_risks])
+    markdown_lines.extend(["", "## Active Interventions"])
+    markdown_lines.extend(
+        [f"- {line}" for line in intervention_lines]
+        if intervention_lines
+        else ["- No active intervention modifiers."]
+    )
+    markdown_lines.extend(["", "## Recent Operator Actions"])
+    markdown_lines.extend(
+        [f"- {line}" for line in recent_actions]
+        if recent_actions
+        else ["- No recent operator actions recorded."]
+    )
+    markdown_lines.extend(["", "## Recommended Next Steps"])
+    markdown_lines.extend([f"- {step}" for step in next_steps])
+    markdown_lines.extend(["", "## Trust Note", trust["confidence_reason"]])
+
+    return {
+        "title": f"{simulation['crisis_label']} incident handoff",
+        "generated_at": generated_at,
+        "status": status,
+        "status_label": status_label,
+        "scenario_label": simulation["crisis_label"],
+        "summary": summary_text,
+        "command_snapshot": command_snapshot,
+        "immediate_risks": immediate_risks,
+        "active_interventions": intervention_lines,
+        "recent_actions": recent_actions,
+        "next_steps": next_steps,
+        "export_filename": export_filename,
+        "markdown": "\n".join(markdown_lines).strip(),
+    }
+
+
 def _decorate_patients(
     patients: list[dict[str, Any]],
     *,
@@ -1780,21 +1943,32 @@ def get_operations_overview(db: Session) -> dict[str, Any]:
     active_interventions = _build_active_interventions(state)
     operator_activity = _build_operator_activity(state)
     last_action_at = state.get("last_action_at")
+    simulation_payload = {
+        **state,
+        "active_interventions": active_interventions,
+        "updated_at": _parse_timestamp(state.get("updated_at")),
+        "last_action_label": _describe_operator_action(
+            state.get("last_action"),
+            intervention_id=state.get("last_intervention_id"),
+            speed=float(state.get("speed", 1.0) or 1.0),
+            scenario_label=state.get("crisis_label"),
+        ),
+        "last_action_at": _parse_timestamp(last_action_at) if last_action_at else None,
+    }
+    incident_handoff = _build_incident_handoff(
+        summary=summary,
+        simulation=simulation_payload,
+        trust=trust,
+        resource_cards=resource_cards,
+        recommended_actions=recommended_actions,
+        active_interventions=active_interventions,
+        operator_activity=operator_activity,
+        patients=decorated_patients,
+    )
 
     return {
         "summary": summary,
-        "simulation": {
-            **state,
-            "active_interventions": active_interventions,
-            "updated_at": _parse_timestamp(state.get("updated_at")),
-            "last_action_label": _describe_operator_action(
-                state.get("last_action"),
-                intervention_id=state.get("last_intervention_id"),
-                speed=float(state.get("speed", 1.0) or 1.0),
-                scenario_label=state.get("crisis_label"),
-            ),
-            "last_action_at": _parse_timestamp(last_action_at) if last_action_at else None,
-        },
+        "simulation": simulation_payload,
         "briefing": briefing,
         "trust": trust,
         "recommended_actions": recommended_actions,
@@ -1806,6 +1980,7 @@ def get_operations_overview(db: Session) -> dict[str, Any]:
         "resource_forecast": resource_forecast,
         "timeline": timeline,
         "operator_activity": operator_activity,
+        "incident_handoff": incident_handoff,
     }
 
 

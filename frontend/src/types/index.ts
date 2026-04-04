@@ -216,6 +216,26 @@ export interface OperatorActivityEntry {
   speed?: number | null
 }
 
+export interface IncidentHandoff {
+  title: string
+  generated_at: string
+  status: 'stable' | 'watch' | 'critical'
+  status_label: string
+  scenario_label: string
+  summary: string
+  command_snapshot: Array<{
+    key: string
+    label: string
+    value: string
+  }>
+  immediate_risks: string[]
+  active_interventions: string[]
+  recent_actions: string[]
+  next_steps: string[]
+  export_filename: string
+  markdown: string
+}
+
 export interface OperationsBriefing {
   headline: string
   summary: string
@@ -328,6 +348,7 @@ export interface OperationsOverview {
   resource_forecast: ResourceForecastPoint[]
   timeline: TimelineEvent[]
   operator_activity: OperatorActivityEntry[]
+  incident_handoff: IncidentHandoff
 }
 
 export interface OpsSnapshotMessage {

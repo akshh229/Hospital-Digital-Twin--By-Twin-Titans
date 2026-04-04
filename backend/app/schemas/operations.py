@@ -44,6 +44,27 @@ class OperatorActivityEntryResponse(BaseModel):
     speed: float | None = None
 
 
+class IncidentHandoffResponse(BaseModel):
+    class SnapshotMetricResponse(BaseModel):
+        key: str
+        label: str
+        value: str
+
+    title: str
+    generated_at: datetime
+    status: Literal["stable", "watch", "critical"]
+    status_label: str
+    scenario_label: str
+    summary: str
+    command_snapshot: list[SnapshotMetricResponse] = Field(default_factory=list)
+    immediate_risks: list[str] = Field(default_factory=list)
+    active_interventions: list[str] = Field(default_factory=list)
+    recent_actions: list[str] = Field(default_factory=list)
+    next_steps: list[str] = Field(default_factory=list)
+    export_filename: str
+    markdown: str
+
+
 class BedPatientResponse(BaseModel):
     patient_id: str
     patient_raw_id: str
@@ -221,6 +242,7 @@ class OperationsOverviewResponse(BaseModel):
     resource_forecast: list[ResourceForecastPointResponse]
     timeline: list[TimelineEventResponse]
     operator_activity: list[OperatorActivityEntryResponse]
+    incident_handoff: IncidentHandoffResponse
 
 
 class SimulationControlRequest(BaseModel):

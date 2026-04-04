@@ -140,6 +140,35 @@ def make_operations_overview_payload():
                 "speed": None,
             }
         ],
+        "incident_handoff": {
+            "title": "Nominal operations incident handoff",
+            "generated_at": now,
+            "status": "watch",
+            "status_label": "Monitored pressure",
+            "scenario_label": "Nominal operations",
+            "summary": "Nominal operations is currently running with ICU occupancy at 12/12 beds, 2 patients in overflow, and 1 active telemetry alert.",
+            "command_snapshot": [
+                {
+                    "key": "icu_occupied",
+                    "label": "ICU occupied",
+                    "value": "12/12 beds",
+                }
+            ],
+            "immediate_risks": [
+                "2 patients still exceed live ICU routing capacity."
+            ],
+            "active_interventions": [
+                "Surge beds active (+2 beds): Expanded live ICU capacity to absorb overflow demand."
+            ],
+            "recent_actions": [
+                "09:00 UTC | Applied surge beds"
+            ],
+            "next_steps": [
+                "Open surge beds or accelerate step-down transfers (Owner: Hospital ops lead)"
+            ],
+            "export_filename": "icu-incident-handoff-20260405-090000",
+            "markdown": "# Nominal operations incident handoff",
+        },
     }
 
 
@@ -281,6 +310,8 @@ class TestOperationsEndpoints:
         assert isinstance(data["scenario_comparison"]["summary_metrics"], list)
         assert isinstance(data["replay_frames"], list)
         assert isinstance(data["operator_activity"], list)
+        assert data["incident_handoff"]["title"]
+        assert data["incident_handoff"]["markdown"].startswith("# ")
         assert data["bed_heatmap"][0]["patient"]["patient_id"] in patient_ids
         assert isinstance(data["bed_heatmap"][0]["patient"]["risk_reasons"], list)
         assert data["trust"]["telemetry_state"] in {"live", "watch", "paused"}

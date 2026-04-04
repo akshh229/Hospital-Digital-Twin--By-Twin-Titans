@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from app.services.operations_center import (
     _build_active_interventions,
     _build_bed_heatmap,
+    _build_incident_handoff,
     _build_incident_replay_frames,
     _build_operator_activity,
     _build_operations_trust,
@@ -130,6 +131,79 @@ def test_build_operator_activity_uses_structured_event_metadata():
     assert activity[0]["action_label"] == "Set speed to 2.0x"
     assert activity[0]["speed"] == 2.0
     assert activity[0]["title"] == "Playback speed set to 2.0x"
+
+
+def test_build_incident_handoff_packages_export_ready_summary():
+    handoff = _build_incident_handoff(
+        summary={
+            "icu_occupied": 12,
+            "icu_capacity": 14,
+            "overflow_patients": 2,
+            "active_alerts": 1,
+            "attention_patients": 3,
+        },
+        simulation={
+            "crisis_label": "Oxygen network degradation",
+            "last_action_label": "Applied oxygen reserve protection",
+            "last_action_at": datetime(2026, 4, 5, 9, 2, tzinfo=UTC),
+        },
+        trust={
+            "confidence_label": "medium",
+            "confidence_reason": "Telemetry is usable but slightly behind the ideal freshness window.",
+            "telemetry_state": "watch",
+        },
+        resource_cards=[
+            {
+                "resource_key": "oxygen_network",
+                "label": "Oxygen network",
+                "available": 28,
+                "capacity": 100,
+                "unit": "%",
+                "status": "critical",
+                "trend": "falling",
+            }
+        ],
+        recommended_actions=[
+            {
+                "title": "Open surge beds or accelerate step-down transfers",
+                "owner": "Hospital ops lead",
+            },
+            {
+                "title": "Rebalance nurse coverage",
+                "owner": "Charge nurse",
+            },
+        ],
+        active_interventions=[
+            {
+                "label": "Oxygen reserve buffer",
+                "value": "+12%",
+                "effect": "Respiratory reserve support is currently lifting the oxygen network model.",
+            }
+        ],
+        operator_activity=[
+            {
+                "timestamp": datetime(2026, 4, 5, 9, 2, tzinfo=UTC),
+                "action_label": "Applied oxygen reserve protection",
+            }
+        ],
+        patients=[
+            {
+                "patient_raw_id": "P00001",
+                "name": "John Smith",
+                "risk_score": 88,
+            }
+        ],
+    )
+
+    assert handoff["status"] == "critical"
+    assert handoff["status_label"] == "Critical pressure"
+    assert handoff["command_snapshot"]
+    assert any("oxygen" in risk.lower() for risk in handoff["immediate_risks"])
+    assert handoff["active_interventions"]
+    assert handoff["recent_actions"][0].endswith("Applied oxygen reserve protection")
+    assert any("Hospital ops lead" in step for step in handoff["next_steps"])
+    assert "## Recommended Next Steps" in handoff["markdown"]
+    assert handoff["export_filename"].startswith("icu-incident-handoff-")
 
 
 def test_bed_heatmap_supports_surge_bed_bonus():
