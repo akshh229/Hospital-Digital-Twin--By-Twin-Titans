@@ -132,6 +132,8 @@ export interface SimulationState {
   active_interventions: ActiveIntervention[]
   updated_at: string
   last_action: string
+  last_action_label: string
+  last_action_at?: string | null
 }
 
 export interface BedPatient {
@@ -198,6 +200,20 @@ export interface TimelineEvent {
   description: string
   patient_id: string | null
   bed_id: string | null
+}
+
+export interface OperatorActivityEntry {
+  id: string
+  timestamp: string
+  action_key: string
+  action_label: string
+  event_type: 'simulation' | 'crisis' | 'intervention'
+  severity: 'normal' | 'warning' | 'critical'
+  title: string
+  description: string
+  intervention_id?: string | null
+  scenario_label?: string | null
+  speed?: number | null
 }
 
 export interface OperationsBriefing {
@@ -311,6 +327,7 @@ export interface OperationsOverview {
   resource_cards: ResourceCard[]
   resource_forecast: ResourceForecastPoint[]
   timeline: TimelineEvent[]
+  operator_activity: OperatorActivityEntry[]
 }
 
 export interface OpsSnapshotMessage {

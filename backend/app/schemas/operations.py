@@ -26,6 +26,22 @@ class SimulationStateResponse(BaseModel):
     active_interventions: list[ActiveInterventionResponse] = Field(default_factory=list)
     updated_at: datetime
     last_action: str
+    last_action_label: str
+    last_action_at: datetime | None = None
+
+
+class OperatorActivityEntryResponse(BaseModel):
+    id: str
+    timestamp: datetime
+    action_key: str
+    action_label: str
+    event_type: Literal["simulation", "crisis", "intervention"]
+    severity: Literal["normal", "warning", "critical"]
+    title: str
+    description: str
+    intervention_id: str | None = None
+    scenario_label: str | None = None
+    speed: float | None = None
 
 
 class BedPatientResponse(BaseModel):
@@ -204,6 +220,7 @@ class OperationsOverviewResponse(BaseModel):
     resource_cards: list[ResourceCardResponse]
     resource_forecast: list[ResourceForecastPointResponse]
     timeline: list[TimelineEventResponse]
+    operator_activity: list[OperatorActivityEntryResponse]
 
 
 class SimulationControlRequest(BaseModel):

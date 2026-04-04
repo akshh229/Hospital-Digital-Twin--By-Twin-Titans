@@ -33,6 +33,7 @@ _DEFAULT_STATE = {
     "last_intervention_baseline": {},
     "updated_at": "",
     "last_action": "initialize",
+    "last_action_at": None,
 }
 
 _redis_client: redis.Redis | None = None
@@ -115,6 +116,7 @@ def update_simulation_state(**updates: Any) -> dict[str, Any]:
 def reset_simulation_state() -> dict[str, Any]:
     state = _normalize_state()
     state["last_action"] = "reset"
+    state["last_action_at"] = _now_iso()
 
     client = _get_redis_client()
     if client is not None:

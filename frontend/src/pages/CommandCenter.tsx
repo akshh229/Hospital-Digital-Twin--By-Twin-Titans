@@ -1,5 +1,6 @@
 import ICUBedHeatmap from '../components/ICUBedHeatmap'
 import OperationsBriefingPanel from '../components/OperationsBriefingPanel'
+import OperatorActivityPanel from '../components/OperatorActivityPanel'
 import PatientFlowTimeline from '../components/PatientFlowTimeline'
 import RecommendedActionsPanel from '../components/RecommendedActionsPanel'
 import ResourceConsumptionPanel from '../components/ResourceConsumptionPanel'
@@ -203,6 +204,10 @@ export default function CommandCenter() {
             simulation={simulation}
             isPending={control.isPending}
             onControl={(payload) => control.mutate(payload)}
+          />
+          <OperatorActivityPanel
+            simulation={simulation}
+            activity={overview.operator_activity}
           />
           <ScenarioPlaybooksPanel
             simulation={simulation}

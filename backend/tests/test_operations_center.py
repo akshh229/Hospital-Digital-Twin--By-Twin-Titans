@@ -7,6 +7,7 @@ from app.services.operations_center import (
     _build_active_interventions,
     _build_bed_heatmap,
     _build_incident_replay_frames,
+    _build_operator_activity,
     _build_operations_trust,
     _build_resource_panels,
     _build_recommended_actions,
@@ -96,6 +97,39 @@ def test_build_active_interventions_from_state_modifiers():
     assert all(item["clear_label"] for item in interventions)
     assert all(item["can_step_down"] is True for item in interventions)
     assert all(item["step_down_label"] for item in interventions)
+
+
+def test_build_operator_activity_uses_structured_event_metadata():
+    with patch(
+        "app.services.operations_center.get_simulation_events",
+        return_value=[
+            {
+                "id": "evt-speed",
+                "timestamp": "2026-04-05T09:02:00+00:00",
+                "event_type": "simulation",
+                "severity": "warning",
+                "title": "Playback speed set to 2.0x",
+                "description": "Command center updated the simulation speed to stress-test response timing.",
+                "action_key": "set_speed",
+                "speed": 2.0,
+            },
+            {
+                "id": "evt-alert",
+                "timestamp": "2026-04-05T09:01:00+00:00",
+                "event_type": "alert",
+                "severity": "critical",
+                "title": "Telemetry breach",
+                "description": "Not an operator event.",
+            },
+        ],
+    ):
+        activity = _build_operator_activity({"crisis_label": "Nominal operations"})
+
+    assert len(activity) == 1
+    assert activity[0]["action_key"] == "set_speed"
+    assert activity[0]["action_label"] == "Set speed to 2.0x"
+    assert activity[0]["speed"] == 2.0
+    assert activity[0]["title"] == "Playback speed set to 2.0x"
 
 
 def test_bed_heatmap_supports_surge_bed_bonus():
@@ -534,8 +568,11 @@ def test_apply_intervention_updates_state_and_emits_event():
     assert state_payload["last_intervention_id"] == "open-surge-beds"
     assert state_payload["last_intervention_baseline"]["icu_capacity"] == 12
     assert state_payload["last_intervention_baseline"]["overflow_patients"] == 4
+    assert state_payload["last_action_at"]
     append_event.assert_called_once()
     assert "surge beds" in append_event.call_args.args[0]["title"].lower()
+    assert append_event.call_args.args[0]["action_key"] == "apply_intervention"
+    assert append_event.call_args.args[0]["action_label"] == "Applied surge beds"
 
 
 def test_step_down_intervention_updates_state_and_emits_event():
@@ -592,8 +629,11 @@ def test_step_down_intervention_updates_state_and_emits_event():
     assert state_payload["last_action"] == "step_down_intervention"
     assert state_payload["last_intervention_id"] == "open-surge-beds"
     assert state_payload["last_intervention_baseline"]["icu_capacity"] == 16
+    assert state_payload["last_action_at"]
     append_event.assert_called_once()
     assert "stepped down" in append_event.call_args.args[0]["title"].lower()
+    assert append_event.call_args.args[0]["action_key"] == "step_down_intervention"
+    assert append_event.call_args.args[0]["action_label"] == "Stepped down surge beds"
 
 
 def test_clear_intervention_updates_state_and_emits_event():
@@ -649,8 +689,14 @@ def test_clear_intervention_updates_state_and_emits_event():
     assert state_payload["last_action"] == "clear_intervention"
     assert state_payload["last_intervention_id"] == "protect-oxygen-reserve"
     assert state_payload["last_intervention_baseline"]["oxygen_network"] == 84
+    assert state_payload["last_action_at"]
     append_event.assert_called_once()
     assert "cleared" in append_event.call_args.args[0]["title"].lower()
+    assert append_event.call_args.args[0]["action_key"] == "clear_intervention"
+    assert (
+        append_event.call_args.args[0]["action_label"]
+        == "Cleared oxygen reserve protection"
+    )
 
 
 def test_timeline_handles_mixed_naive_and_aware_timestamps():

@@ -43,6 +43,8 @@ def make_operations_overview_payload():
             ],
             "updated_at": now,
             "last_action": "apply_intervention",
+            "last_action_label": "Applied surge beds",
+            "last_action_at": now,
         },
         "briefing": {
             "headline": "Capacity strain requires intervention",
@@ -123,6 +125,21 @@ def make_operations_overview_payload():
         "resource_cards": [],
         "resource_forecast": [],
         "timeline": [],
+        "operator_activity": [
+            {
+                "id": "evt-surge",
+                "timestamp": now,
+                "action_key": "apply_intervention",
+                "action_label": "Applied surge beds",
+                "event_type": "intervention",
+                "severity": "warning",
+                "title": "Surge beds opened",
+                "description": "Two surge-capacity beds were activated and queue pressure was reduced.",
+                "intervention_id": "open-surge-beds",
+                "scenario_label": "Nominal operations",
+                "speed": None,
+            }
+        ],
     }
 
 
@@ -260,8 +277,10 @@ class TestOperationsEndpoints:
         assert data["recommended_actions"][0]["projected_window_minutes"] == 30
         assert isinstance(data["simulation"]["active_interventions"], list)
         assert data["simulation"]["active_interventions"][0]["id"] == "open-surge-beds"
+        assert data["simulation"]["last_action_label"]
         assert isinstance(data["scenario_comparison"]["summary_metrics"], list)
         assert isinstance(data["replay_frames"], list)
+        assert isinstance(data["operator_activity"], list)
         assert data["bed_heatmap"][0]["patient"]["patient_id"] in patient_ids
         assert isinstance(data["bed_heatmap"][0]["patient"]["risk_reasons"], list)
         assert data["trust"]["telemetry_state"] in {"live", "watch", "paused"}

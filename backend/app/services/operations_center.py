@@ -311,6 +311,86 @@ def _build_active_interventions(state: dict[str, Any]) -> list[dict[str, Any]]:
     return interventions
 
 
+def _intervention_subject(intervention_id: str | None) -> str:
+    subjects = {
+        "open-surge-beds": "surge beds",
+        "protect-oxygen-reserve": "oxygen reserve protection",
+        "rebalance-nurse-coverage": "staff reinforcement",
+        "review-alerting-patients": "alert review",
+    }
+    if not intervention_id:
+        return "operator intervention"
+    return subjects.get(intervention_id, intervention_id.replace("-", " "))
+
+
+def _describe_operator_action(
+    action: str | None,
+    *,
+    intervention_id: str | None = None,
+    speed: float | None = None,
+    scenario_label: str | None = None,
+) -> str:
+    normalized_action = action or "initialize"
+
+    if normalized_action == "pause":
+        return "Paused simulator"
+    if normalized_action == "resume":
+        return "Resumed simulator"
+    if normalized_action == "set_speed":
+        return f"Set speed to {(speed or 1.0):.1f}x"
+    if normalized_action == "inject_crisis":
+        return f"Injected {scenario_label or 'crisis scenario'}"
+    if normalized_action == "apply_intervention":
+        return f"Applied {_intervention_subject(intervention_id)}"
+    if normalized_action == "step_down_intervention":
+        return f"Stepped down {_intervention_subject(intervention_id)}"
+    if normalized_action == "clear_intervention":
+        return f"Cleared {_intervention_subject(intervention_id)}"
+    if normalized_action == "reset":
+        return "Reset baseline"
+    if normalized_action == "initialize":
+        return "Initialized simulator"
+    return normalized_action.replace("_", " ").strip().title()
+
+
+def _build_operator_activity(state: dict[str, Any]) -> list[dict[str, Any]]:
+    activity: list[dict[str, Any]] = []
+
+    for event in get_simulation_events(limit=min(settings.OPS_TIMELINE_LIMIT, 8)):
+        event_type = str(event.get("event_type") or "simulation")
+        if event_type not in {"simulation", "crisis", "intervention"}:
+            continue
+
+        action_key = str(event.get("action_key") or event_type)
+        intervention_id = event.get("intervention_id")
+        speed = event.get("speed")
+        scenario_label = event.get("scenario_label")
+
+        activity.append(
+            {
+                "id": event["id"],
+                "timestamp": _parse_timestamp(event.get("timestamp")),
+                "action_key": action_key,
+                "action_label": event.get("action_label")
+                or _describe_operator_action(
+                    action_key,
+                    intervention_id=intervention_id,
+                    speed=float(speed) if speed is not None else None,
+                    scenario_label=str(scenario_label) if scenario_label else None,
+                ),
+                "event_type": event_type,
+                "severity": str(event.get("severity") or "normal"),
+                "title": str(event.get("title") or "Operator action"),
+                "description": str(event.get("description") or ""),
+                "intervention_id": intervention_id,
+                "scenario_label": scenario_label,
+                "speed": float(speed) if speed is not None else None,
+            }
+        )
+
+    return activity
+
+
 def _decorate_patients(
     patients: list[dict[str, Any]],
     *,
@@ -1697,13 +1777,23 @@ def get_operations_overview(db: Session) -> dict[str, Any]:
         timeline=timeline,
         summary=summary,
     )
+    active_interventions = _build_active_interventions(state)
+    operator_activity = _build_operator_activity(state)
+    last_action_at = state.get("last_action_at")
 
     return {
         "summary": summary,
         "simulation": {
             **state,
-            "active_interventions": _build_active_interventions(state),
+            "active_interventions": active_interventions,
             "updated_at": _parse_timestamp(state.get("updated_at")),
+            "last_action_label": _describe_operator_action(
+                state.get("last_action"),
+                intervention_id=state.get("last_intervention_id"),
+                speed=float(state.get("speed", 1.0) or 1.0),
+                scenario_label=state.get("crisis_label"),
+            ),
+            "last_action_at": _parse_timestamp(last_action_at) if last_action_at else None,
         },
         "briefing": briefing,
         "trust": trust,
@@ -1715,6 +1805,7 @@ def get_operations_overview(db: Session) -> dict[str, Any]:
         "resource_cards": resource_cards,
         "resource_forecast": resource_forecast,
         "timeline": timeline,
+        "operator_activity": operator_activity,
     }
 
 
@@ -1758,11 +1849,13 @@ def _apply_intervention(
     intervention_id: str,
     baseline: dict[str, int],
 ) -> None:
+    action_timestamp = _utcnow().isoformat()
     base_updates: dict[str, Any] = {
         "last_action": "apply_intervention",
         "last_intervention_id": intervention_id,
-        "last_intervention_at": _utcnow().isoformat(),
+        "last_intervention_at": action_timestamp,
         "last_intervention_baseline": baseline,
+        "last_action_at": action_timestamp,
     }
     title = "Intervention applied"
     description = "Command center intervention updated the ICU twin."
@@ -1816,6 +1909,11 @@ def _apply_intervention(
     append_simulation_event(
         {
             "event_type": "intervention",
+            "action_key": "apply_intervention",
+            "action_label": _describe_operator_action(
+                "apply_intervention",
+                intervention_id=intervention_id,
+            ),
             "severity": severity,
             "title": title,
             "description": description,
@@ -1831,11 +1929,13 @@ def _manage_intervention_lifecycle(
     baseline: dict[str, int],
     action: str,
 ) -> None:
+    action_timestamp = _utcnow().isoformat()
     base_updates: dict[str, Any] = {
         "last_action": action,
         "last_intervention_id": intervention_id,
-        "last_intervention_at": _utcnow().isoformat(),
+        "last_intervention_at": action_timestamp,
         "last_intervention_baseline": baseline,
+        "last_action_at": action_timestamp,
     }
     is_clear = action == "clear_intervention"
     title = "Intervention updated"
@@ -1845,7 +1945,7 @@ def _manage_intervention_lifecycle(
     if intervention_id == "open-surge-beds":
         current_bonus = int(current_state.get("surge_bed_bonus", 0) or 0)
         if current_bonus <= 0:
-            update_simulation_state(last_action=action)
+            update_simulation_state(**base_updates)
             title = "Surge beds already clear"
             description = "No surge-capacity beds are currently active in the ICU model."
             severity = "warning"
@@ -1867,7 +1967,7 @@ def _manage_intervention_lifecycle(
     elif intervention_id == "protect-oxygen-reserve":
         current_bonus = int(current_state.get("oxygen_reserve_bonus", 0) or 0)
         if current_bonus <= 0:
-            update_simulation_state(last_action=action)
+            update_simulation_state(**base_updates)
             title = "Oxygen reserve already clear"
             description = "No oxygen reserve reinforcement is currently active."
             severity = "warning"
@@ -1886,7 +1986,7 @@ def _manage_intervention_lifecycle(
     elif intervention_id == "rebalance-nurse-coverage":
         current_bonus = int(current_state.get("staffing_support_bonus", 0) or 0)
         if current_bonus <= 0:
-            update_simulation_state(last_action=action)
+            update_simulation_state(**base_updates)
             title = "Staff support already clear"
             description = "No staffing reinforcement is currently active in the live model."
             severity = "warning"
@@ -1903,7 +2003,7 @@ def _manage_intervention_lifecycle(
                 title = "Staff reinforcement stepped down"
                 description = "One staffing reinforcement step was removed from the live ICU model."
     else:
-        update_simulation_state(last_action=action)
+        update_simulation_state(**base_updates)
         title = "Unknown intervention"
         description = f"Intervention '{intervention_id}' is not recognized by the lifecycle control layer."
         severity = "warning"
@@ -1911,6 +2011,11 @@ def _manage_intervention_lifecycle(
     append_simulation_event(
         {
             "event_type": "intervention",
+            "action_key": action,
+            "action_label": _describe_operator_action(
+                action,
+                intervention_id=intervention_id,
+            ),
             "severity": severity,
             "title": title,
             "description": description,
@@ -1978,20 +2083,32 @@ def apply_simulation_action(
     scenario_name = scenario or current_state.get("active_scenario", "baseline")
 
     if action == "pause":
-        update_simulation_state(is_paused=True, last_action="pause")
+        update_simulation_state(
+            is_paused=True,
+            last_action="pause",
+            last_action_at=_utcnow().isoformat(),
+        )
         append_simulation_event(
             {
                 "event_type": "simulation",
+                "action_key": "pause",
+                "action_label": _describe_operator_action("pause"),
                 "severity": "warning",
                 "title": "Simulation paused",
                 "description": "Operator paused the twin to inspect ICU capacity and routing pressure.",
             }
         )
     elif action == "resume":
-        update_simulation_state(is_paused=False, last_action="resume")
+        update_simulation_state(
+            is_paused=False,
+            last_action="resume",
+            last_action_at=_utcnow().isoformat(),
+        )
         append_simulation_event(
             {
                 "event_type": "simulation",
+                "action_key": "resume",
+                "action_label": _describe_operator_action("resume"),
                 "severity": "normal",
                 "title": "Simulation resumed",
                 "description": "Realtime digital twin resumed normal event playback.",
@@ -1999,13 +2116,23 @@ def apply_simulation_action(
         )
     elif action == "set_speed":
         next_speed = float(speed or current_state.get("speed", 1.0))
-        update_simulation_state(speed=next_speed, last_action="set_speed")
+        update_simulation_state(
+            speed=next_speed,
+            last_action="set_speed",
+            last_action_at=_utcnow().isoformat(),
+        )
         append_simulation_event(
             {
                 "event_type": "simulation",
+                "action_key": "set_speed",
+                "action_label": _describe_operator_action(
+                    "set_speed",
+                    speed=next_speed,
+                ),
                 "severity": "warning" if next_speed > 1.5 else "normal",
                 "title": f"Playback speed set to {next_speed:.1f}x",
                 "description": "Command center updated the simulation speed to stress-test response timing.",
+                "speed": next_speed,
             }
         )
     elif action == "inject_crisis":
@@ -2019,6 +2146,7 @@ def apply_simulation_action(
             crisis_label=crisis_label,
             virtual_admissions=virtual_admissions,
             last_action="inject_crisis",
+            last_action_at=_utcnow().isoformat(),
         )
 
         patients = _decorate_patients(
@@ -2035,9 +2163,15 @@ def apply_simulation_action(
         append_simulation_event(
             {
                 "event_type": "crisis",
+                "action_key": "inject_crisis",
+                "action_label": _describe_operator_action(
+                    "inject_crisis",
+                    scenario_label=crisis_label,
+                ),
                 "severity": "critical" if severity_level >= 2 else "warning",
                 "title": crisis_label,
                 "description": f"{crisis_label} injected into the ICU twin affecting {patient_count or min(4, len(patients))} live patients.",
+                "scenario_label": crisis_label,
             }
         )
     elif action == "apply_intervention":
@@ -2069,6 +2203,8 @@ def apply_simulation_action(
         append_simulation_event(
             {
                 "event_type": "simulation",
+                "action_key": "reset",
+                "action_label": _describe_operator_action("reset"),
                 "severity": "normal",
                 "title": "Simulation reset",
                 "description": "Digital twin returned to baseline hospital operations.",
