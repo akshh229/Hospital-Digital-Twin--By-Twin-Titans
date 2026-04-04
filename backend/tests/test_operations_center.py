@@ -81,17 +81,21 @@ def test_decorated_patients_include_risk_reasons():
 def test_build_active_interventions_from_state_modifiers():
     interventions = _build_active_interventions(
         {
-            "surge_bed_bonus": 2,
-            "oxygen_reserve_bonus": 12,
-            "staffing_support_bonus": 3,
+            "surge_bed_bonus": 4,
+            "oxygen_reserve_bonus": 24,
+            "staffing_support_bonus": 6,
         }
     )
 
     assert len(interventions) == 3
     assert interventions[0]["label"]
     assert any(item["id"] == "open-surge-beds" for item in interventions)
-    assert any(item["value"] == "+2 beds" for item in interventions)
-    assert any(item["value"] == "+12%" for item in interventions)
+    assert any(item["value"] == "+4 beds" for item in interventions)
+    assert any(item["value"] == "+24%" for item in interventions)
+    assert all(item["can_clear"] is True for item in interventions)
+    assert all(item["clear_label"] for item in interventions)
+    assert all(item["can_step_down"] is True for item in interventions)
+    assert all(item["step_down_label"] for item in interventions)
 
 
 def test_bed_heatmap_supports_surge_bed_bonus():
@@ -532,6 +536,121 @@ def test_apply_intervention_updates_state_and_emits_event():
     assert state_payload["last_intervention_baseline"]["overflow_patients"] == 4
     append_event.assert_called_once()
     assert "surge beds" in append_event.call_args.args[0]["title"].lower()
+
+
+def test_step_down_intervention_updates_state_and_emits_event():
+    db = MagicMock()
+
+    with patch(
+        "app.services.operations_center.get_simulation_state",
+        return_value={
+            "is_paused": False,
+            "speed": 1.0,
+            "active_scenario": "baseline",
+            "crisis_level": 0,
+            "crisis_label": "Nominal operations",
+            "virtual_admissions": 0,
+            "surge_bed_bonus": 4,
+            "oxygen_reserve_bonus": 0,
+            "staffing_support_bonus": 0,
+            "updated_at": "2026-04-05T09:00:00",
+            "last_action": "apply_intervention",
+        },
+    ), patch(
+        "app.services.operations_center.update_simulation_state"
+    ) as update_state, patch(
+        "app.services.operations_center.append_simulation_event"
+    ) as append_event, patch(
+        "app.services.operations_center.get_operations_overview",
+        side_effect=[
+            {
+                "summary": {
+                    "icu_capacity": 16,
+                    "overflow_patients": 0,
+                    "attention_patients": 2,
+                    "active_alerts": 0,
+                },
+                "resource_cards": [
+                    {"resource_key": "oxygen_network", "available": 72},
+                    {"resource_key": "critical_care_nurses", "available": 4},
+                ],
+            },
+            {"ok": True},
+        ],
+    ):
+        result = apply_simulation_action(
+            db,
+            action="step_down_intervention",
+            intervention_id="open-surge-beds",
+        )
+
+    assert result == {"ok": True}
+    update_state.assert_called_once()
+    state_payload = update_state.call_args.kwargs
+    assert state_payload["surge_bed_bonus"] == 2
+    assert state_payload["virtual_admissions"] == 2
+    assert state_payload["last_action"] == "step_down_intervention"
+    assert state_payload["last_intervention_id"] == "open-surge-beds"
+    assert state_payload["last_intervention_baseline"]["icu_capacity"] == 16
+    append_event.assert_called_once()
+    assert "stepped down" in append_event.call_args.args[0]["title"].lower()
+
+
+def test_clear_intervention_updates_state_and_emits_event():
+    db = MagicMock()
+
+    with patch(
+        "app.services.operations_center.get_simulation_state",
+        return_value={
+            "is_paused": False,
+            "speed": 1.0,
+            "active_scenario": "baseline",
+            "crisis_level": 0,
+            "crisis_label": "Nominal operations",
+            "virtual_admissions": 1,
+            "surge_bed_bonus": 0,
+            "oxygen_reserve_bonus": 12,
+            "staffing_support_bonus": 0,
+            "updated_at": "2026-04-05T09:00:00",
+            "last_action": "apply_intervention",
+        },
+    ), patch(
+        "app.services.operations_center.update_simulation_state"
+    ) as update_state, patch(
+        "app.services.operations_center.append_simulation_event"
+    ) as append_event, patch(
+        "app.services.operations_center.get_operations_overview",
+        side_effect=[
+            {
+                "summary": {
+                    "icu_capacity": 12,
+                    "overflow_patients": 1,
+                    "attention_patients": 2,
+                    "active_alerts": 1,
+                },
+                "resource_cards": [
+                    {"resource_key": "oxygen_network", "available": 84},
+                    {"resource_key": "critical_care_nurses", "available": 4},
+                ],
+            },
+            {"ok": True},
+        ],
+    ):
+        result = apply_simulation_action(
+            db,
+            action="clear_intervention",
+            intervention_id="protect-oxygen-reserve",
+        )
+
+    assert result == {"ok": True}
+    update_state.assert_called_once()
+    state_payload = update_state.call_args.kwargs
+    assert state_payload["oxygen_reserve_bonus"] == 0
+    assert state_payload["last_action"] == "clear_intervention"
+    assert state_payload["last_intervention_id"] == "protect-oxygen-reserve"
+    assert state_payload["last_intervention_baseline"]["oxygen_network"] == 84
+    append_event.assert_called_once()
+    assert "cleared" in append_event.call_args.args[0]["title"].lower()
 
 
 def test_timeline_handles_mixed_naive_and_aware_timestamps():

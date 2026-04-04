@@ -245,6 +245,21 @@ def _build_active_interventions(state: dict[str, Any]) -> list[dict[str, Any]]:
     oxygen_reserve_bonus = int(state.get("oxygen_reserve_bonus", 0) or 0)
     staffing_support_bonus = int(state.get("staffing_support_bonus", 0) or 0)
 
+    def lifecycle_controls(
+        *,
+        current_value: int,
+        step_value: int,
+        step_down_label: str,
+        clear_label: str,
+    ) -> dict[str, Any]:
+        can_step_down = current_value > step_value
+        return {
+            "can_step_down": can_step_down,
+            "step_down_label": step_down_label if can_step_down else None,
+            "can_clear": current_value > 0,
+            "clear_label": clear_label if current_value > 0 else None,
+        }
+
     if surge_bed_bonus > 0:
         interventions.append(
             {
@@ -252,6 +267,12 @@ def _build_active_interventions(state: dict[str, Any]) -> list[dict[str, Any]]:
                 "label": "Surge beds active",
                 "value": f"+{surge_bed_bonus} beds",
                 "effect": "Expanded live ICU capacity to absorb overflow demand.",
+                **lifecycle_controls(
+                    current_value=surge_bed_bonus,
+                    step_value=2,
+                    step_down_label="Remove 2 surge beds",
+                    clear_label="Clear surge beds",
+                ),
             }
         )
 
@@ -262,6 +283,12 @@ def _build_active_interventions(state: dict[str, Any]) -> list[dict[str, Any]]:
                 "label": "Oxygen reserve buffer",
                 "value": f"+{oxygen_reserve_bonus}%",
                 "effect": "Respiratory reserve support is currently lifting the oxygen network model.",
+                **lifecycle_controls(
+                    current_value=oxygen_reserve_bonus,
+                    step_value=12,
+                    step_down_label="Reduce reserve buffer",
+                    clear_label="Clear reserve buffer",
+                ),
             }
         )
 
@@ -272,6 +299,12 @@ def _build_active_interventions(state: dict[str, Any]) -> list[dict[str, Any]]:
                 "label": "Staff reinforcement",
                 "value": f"+{staffing_support_bonus} staff",
                 "effect": "Additional critical care coverage is widening staffing headroom.",
+                **lifecycle_controls(
+                    current_value=staffing_support_bonus,
+                    step_value=3,
+                    step_down_label="Reduce staffing support",
+                    clear_label="Clear staffing support",
+                ),
             }
         )
 
@@ -1791,6 +1824,101 @@ def _apply_intervention(
     )
 
 
+def _manage_intervention_lifecycle(
+    *,
+    current_state: dict[str, Any],
+    intervention_id: str,
+    baseline: dict[str, int],
+    action: str,
+) -> None:
+    base_updates: dict[str, Any] = {
+        "last_action": action,
+        "last_intervention_id": intervention_id,
+        "last_intervention_at": _utcnow().isoformat(),
+        "last_intervention_baseline": baseline,
+    }
+    is_clear = action == "clear_intervention"
+    title = "Intervention updated"
+    description = "Operator adjusted an active intervention."
+    severity = "warning"
+
+    if intervention_id == "open-surge-beds":
+        current_bonus = int(current_state.get("surge_bed_bonus", 0) or 0)
+        if current_bonus <= 0:
+            update_simulation_state(last_action=action)
+            title = "Surge beds already clear"
+            description = "No surge-capacity beds are currently active in the ICU model."
+            severity = "warning"
+        else:
+            next_bonus = 0 if is_clear else max(current_bonus - 2, 0)
+            released_beds = current_bonus - next_bonus
+            next_virtual_admissions = int(current_state.get("virtual_admissions", 0) or 0) + released_beds
+            update_simulation_state(
+                **base_updates,
+                surge_bed_bonus=next_bonus,
+                virtual_admissions=next_virtual_admissions,
+            )
+            if is_clear:
+                title = "Surge beds cleared"
+                description = "All surge-capacity beds were returned to baseline capacity."
+            else:
+                title = "Surge beds stepped down"
+                description = "One surge-capacity increment was removed from the live ICU map."
+    elif intervention_id == "protect-oxygen-reserve":
+        current_bonus = int(current_state.get("oxygen_reserve_bonus", 0) or 0)
+        if current_bonus <= 0:
+            update_simulation_state(last_action=action)
+            title = "Oxygen reserve already clear"
+            description = "No oxygen reserve reinforcement is currently active."
+            severity = "warning"
+        else:
+            next_bonus = 0 if is_clear else max(current_bonus - 12, 0)
+            update_simulation_state(
+                **base_updates,
+                oxygen_reserve_bonus=next_bonus,
+            )
+            if is_clear:
+                title = "Oxygen reserve cleared"
+                description = "Respiratory reserve support was returned to baseline."
+            else:
+                title = "Oxygen reserve stepped down"
+                description = "One oxygen reserve reinforcement step was removed from the live model."
+    elif intervention_id == "rebalance-nurse-coverage":
+        current_bonus = int(current_state.get("staffing_support_bonus", 0) or 0)
+        if current_bonus <= 0:
+            update_simulation_state(last_action=action)
+            title = "Staff support already clear"
+            description = "No staffing reinforcement is currently active in the live model."
+            severity = "warning"
+        else:
+            next_bonus = 0 if is_clear else max(current_bonus - 3, 0)
+            update_simulation_state(
+                **base_updates,
+                staffing_support_bonus=next_bonus,
+            )
+            if is_clear:
+                title = "Staff reinforcement cleared"
+                description = "Critical care staffing support was returned to baseline."
+            else:
+                title = "Staff reinforcement stepped down"
+                description = "One staffing reinforcement step was removed from the live ICU model."
+    else:
+        update_simulation_state(last_action=action)
+        title = "Unknown intervention"
+        description = f"Intervention '{intervention_id}' is not recognized by the lifecycle control layer."
+        severity = "warning"
+
+    append_simulation_event(
+        {
+            "event_type": "intervention",
+            "severity": severity,
+            "title": title,
+            "description": description,
+            "intervention_id": intervention_id,
+        }
+    )
+
+
 def _inject_crisis_samples(
     db: Session,
     patients: list[dict[str, Any]],
@@ -1923,6 +2051,18 @@ def apply_simulation_action(
             current_state=current_state,
             intervention_id=intervention_id or "",
             baseline=baseline,
+        )
+    elif action in {"step_down_intervention", "clear_intervention"}:
+        baseline_overview = get_operations_overview(db)
+        baseline = _capture_intervention_baseline(
+            summary=baseline_overview["summary"],
+            resource_cards=baseline_overview["resource_cards"],
+        )
+        _manage_intervention_lifecycle(
+            current_state=current_state,
+            intervention_id=intervention_id or "",
+            baseline=baseline,
+            action=action,
         )
     else:
         reset_simulation_state()

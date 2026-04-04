@@ -121,6 +121,42 @@ export default function SimulationControlPanel({
                 <p className="mt-2 text-xs leading-5 text-lazarus-muted">
                   {intervention.effect}
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {intervention.can_step_down ? (
+                    <button
+                      type="button"
+                      className="rounded-full border border-lazarus-warning/30 bg-lazarus-warning/10 px-3 py-1.5 text-xs font-semibold text-lazarus-warning transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={isPending}
+                      onClick={() =>
+                        onControl({
+                          action: 'step_down_intervention',
+                          intervention_id: intervention.id,
+                        })
+                      }
+                    >
+                      {isPending
+                        ? 'Updating intervention...'
+                        : intervention.step_down_label ?? 'Step down'}
+                    </button>
+                  ) : null}
+                  {intervention.can_clear ? (
+                    <button
+                      type="button"
+                      className="rounded-full border border-lazarus-border bg-lazarus-surface px-3 py-1.5 text-xs font-semibold text-lazarus-text transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={isPending}
+                      onClick={() =>
+                        onControl({
+                          action: 'clear_intervention',
+                          intervention_id: intervention.id,
+                        })
+                      }
+                    >
+                      {isPending
+                        ? 'Updating intervention...'
+                        : intervention.clear_label ?? 'Clear intervention'}
+                    </button>
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>

@@ -116,6 +116,10 @@ export interface ActiveIntervention {
   label: string
   value: string
   effect: string
+  can_step_down: boolean
+  step_down_label?: string | null
+  can_clear: boolean
+  clear_label?: string | null
 }
 
 export interface SimulationState {
@@ -321,6 +325,8 @@ export interface SimulationControlRequest {
     | 'set_speed'
     | 'inject_crisis'
     | 'apply_intervention'
+    | 'step_down_intervention'
+    | 'clear_intervention'
     | 'reset'
   speed?: number
   scenario?: string

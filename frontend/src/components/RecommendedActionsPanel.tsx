@@ -131,7 +131,7 @@ export default function RecommendedActionsPanel({
                   <div className="rounded-[1.2rem] border border-lazarus-info/18 bg-lazarus-info/6 px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lazarus-muted">
-                        Observed after last intervention
+                        Observed after latest operator action
                       </p>
                       <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-lazarus-info">
                         Live

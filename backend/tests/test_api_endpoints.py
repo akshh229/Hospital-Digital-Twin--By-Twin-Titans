@@ -35,6 +35,10 @@ def make_operations_overview_payload():
                     "label": "Surge beds active",
                     "value": "+2 beds",
                     "effect": "Expanded live ICU capacity to absorb overflow demand.",
+                    "can_step_down": False,
+                    "step_down_label": None,
+                    "can_clear": True,
+                    "clear_label": "Clear surge beds",
                 }
             ],
             "updated_at": now,
@@ -283,5 +287,38 @@ class TestOperationsEndpoints:
 
         assert response.status_code == 200
         assert response.json()["simulation"]["last_action"] == "apply_intervention"
+        apply_action.assert_called_once()
+        assert apply_action.call_args.kwargs["intervention_id"] == "open-surge-beds"
+
+    @pytest.mark.parametrize(
+        ("action", "expected_last_action"),
+        [
+            ("step_down_intervention", "step_down_intervention"),
+            ("clear_intervention", "clear_intervention"),
+        ],
+    )
+    def test_control_endpoint_accepts_intervention_lifecycle_actions(
+        self,
+        client,
+        action,
+        expected_last_action,
+    ):
+        payload = make_operations_overview_payload()
+        payload["simulation"]["last_action"] = expected_last_action
+
+        with patch(
+            "app.api.operations.apply_simulation_action",
+            return_value=payload,
+        ) as apply_action:
+            response = client.post(
+                "/api/ops/control",
+                json={
+                    "action": action,
+                    "intervention_id": "open-surge-beds",
+                },
+            )
+
+        assert response.status_code == 200
+        assert response.json()["simulation"]["last_action"] == expected_last_action
         apply_action.assert_called_once()
         assert apply_action.call_args.kwargs["intervention_id"] == "open-surge-beds"

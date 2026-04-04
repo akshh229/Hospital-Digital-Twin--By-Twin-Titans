@@ -12,6 +12,10 @@ class SimulationStateResponse(BaseModel):
         label: str
         value: str
         effect: str
+        can_step_down: bool = False
+        step_down_label: str | None = None
+        can_clear: bool = False
+        clear_label: str | None = None
 
     is_paused: bool
     speed: float
@@ -203,7 +207,16 @@ class OperationsOverviewResponse(BaseModel):
 
 
 class SimulationControlRequest(BaseModel):
-    action: Literal["pause", "resume", "set_speed", "inject_crisis", "apply_intervention", "reset"]
+    action: Literal[
+        "pause",
+        "resume",
+        "set_speed",
+        "inject_crisis",
+        "apply_intervention",
+        "step_down_intervention",
+        "clear_intervention",
+        "reset",
+    ]
     speed: float | None = Field(default=None, ge=0.5, le=4.0)
     scenario: str | None = Field(default=None, max_length=60)
     severity: Literal["minor", "major", "extreme"] | None = None
