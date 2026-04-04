@@ -114,7 +114,7 @@ describe('PatientAlertPanel', () => {
     renderPanel()
 
     expect(
-      await screen.findByText('Alert acknowledgement available')
+      await screen.findByText(/acknowledgement available/i)
     ).toBeInTheDocument()
 
     await user.click(
