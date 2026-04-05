@@ -1,0 +1,7 @@
+NAME                IMAGE                           COMMAND                  SERVICE     CREATED          STATUS                    PORTS
+lazarus-backend     hospitaldigitaltwin-backend     "sh -c 'alembic upgr…"   backend     3 minutes ago    Up 3 minutes (healthy)    0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+lazarus-frontend    hospitaldigitaltwin-frontend    "docker-entrypoint.s…"   frontend    5 minutes ago    Up 20 seconds (healthy)   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+lazarus-nginx       nginx:alpine                    "/docker-entrypoint.…"   nginx       51 minutes ago   Up 50 minutes             0.0.0.0:80->80/tcp, [::]:80->80/tcp
+lazarus-postgres    postgres:15-alpine              "docker-entrypoint.s…"   postgres    51 minutes ago   Up 51 minutes (healthy)   5432/tcp
+lazarus-redis       redis:7-alpine                  "docker-entrypoint.s…"   redis       51 minutes ago   Up 51 minutes (healthy)   6379/tcp
+lazarus-simulator   hospitaldigitaltwin-simulator   "python -m app.worke…"   simulator   5 minutes ago    Up 20 seconds             8000/tcp

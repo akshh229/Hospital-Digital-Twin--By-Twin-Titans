@@ -15,17 +15,18 @@ export default function VitalsChart({ data, title, showBpm = true, showOxygen = 
   }))
   const latestPoint = chartData[chartData.length - 1]
   const chartPalette = {
-    grid: '#d7dee6',
-    axis: '#60758a',
-    tooltipBg: 'rgba(255, 255, 255, 0.97)',
-    tooltipBorder: '1px solid rgba(215, 222, 230, 0.95)',
-    tooltipText: '#18212b',
-    tooltipShadow: '0 18px 40px rgba(43, 58, 79, 0.12)',
-    oxygenLine: '#4f6d8a',
-    oxygenDot: '#b8c8d8',
-    oxygenBand: '#6b84a0',
-    bpmLine: '#d85c5c',
-    bpmDot: '#ffd4d4',
+    grid: 'rgb(var(--color-lazarus-border) / 0.26)',
+    axis: 'rgb(var(--color-lazarus-muted) / 0.86)',
+    tooltipBg: 'rgb(var(--color-lazarus-surface-low) / 0.96)',
+    tooltipBorder: '1px solid rgb(var(--color-lazarus-border) / 0.56)',
+    tooltipText: 'rgb(var(--color-lazarus-text) / 0.96)',
+    tooltipShadow: '0 18px 40px rgb(3 8 15 / 0.28)',
+    oxygenLine: 'rgb(var(--color-lazarus-info) / 0.84)',
+    oxygenDot: 'rgb(var(--color-lazarus-info))',
+    oxygenBand: 'rgb(var(--color-lazarus-info))',
+    bpmLine: 'rgb(var(--color-lazarus-critical) / 0.9)',
+    bpmDot: 'rgb(var(--color-lazarus-critical))',
+    safeZone: 'rgb(var(--color-lazarus-normal) / 0.12)',
   }
 
   return (
@@ -79,17 +80,17 @@ export default function VitalsChart({ data, title, showBpm = true, showOxygen = 
               border: chartPalette.tooltipBorder,
               borderRadius: '14px',
               color: chartPalette.tooltipText,
-              boxShadow: chartPalette.tooltipShadow
+              boxShadow: chartPalette.tooltipShadow,
             }}
           />
-          <Legend />
+          <Legend wrapperStyle={{ color: chartPalette.axis, fontSize: '12px' }} />
 
           {/* BPM safe zone */}
           {showBpm && (
             <>
-              <ReferenceArea yAxisId="bpm" y1={60} y2={100} fill="#10b981" fillOpacity={0.1} />
-              <ReferenceLine yAxisId="bpm" y={60} stroke="#10b981" strokeDasharray="5 5" strokeOpacity={0.5} />
-              <ReferenceLine yAxisId="bpm" y={100} stroke="#10b981" strokeDasharray="5 5" strokeOpacity={0.5} />
+              <ReferenceArea yAxisId="bpm" y1={60} y2={100} fill={chartPalette.safeZone} />
+              <ReferenceLine yAxisId="bpm" y={60} stroke={chartPalette.safeZone} strokeDasharray="5 5" strokeOpacity={0.75} />
+              <ReferenceLine yAxisId="bpm" y={100} stroke={chartPalette.safeZone} strokeDasharray="5 5" strokeOpacity={0.75} />
             </>
           )}
 

@@ -27,29 +27,33 @@
 
 /* ─── Theme Tokens: True Dark / Slate ───────────────────────────── */
 .dark {
-  --color-lazarus-bg: 9 14 20;
-  --color-lazarus-surface-low: 15 22 30;
-  --color-lazarus-surface: 19 28 38;
-  --color-lazarus-surface-high: 28 40 52;
-  --color-lazarus-border: 41 57 73;
-  --color-lazarus-text: 236 246 249;
-  --color-lazarus-muted: 139 167 179;
-  --color-lazarus-critical: 230 110 96;
-  --color-lazarus-warning: 220 164 93;
-  --color-lazarus-normal: 44 180 140;
-  --color-lazarus-info: 54 180 210;
-  --color-lazarus-accent: 63 196 222;
-  --pulse-critical-start: rgba(35, 15, 15, 0.99);
-  --pulse-critical-mid: rgba(65, 20, 15, 0.99);
-  --badge-throb-shadow: 0 0 18px rgba(230, 110, 96, 0.24);
-  --live-dot-shadow-start: 0 0 0 0 rgba(44, 180, 140, 0.32);
-  --live-dot-shadow-mid: 0 0 0 8px rgba(44, 180, 140, 0);
-  --shell-flash-glow: 0 0 0 1px rgba(54, 180, 210, 0.32), 0 0 28px rgba(54, 180, 210, 0.24);
-  --critical-shell-flash-glow: 0 0 0 1px rgba(230, 110, 96, 0.38), 0 0 34px rgba(230, 110, 96, 0.24);
+  --color-lazarus-bg: 9 17 26;
+  --color-lazarus-surface-low: 14 22 31;
+  --color-lazarus-surface: 18 28 39;
+  --color-lazarus-surface-high: 26 39 52;
+  --color-lazarus-border: 63 85 104;
+  --color-lazarus-text: 226 237 243;
+  --color-lazarus-muted: 142 163 178;
+  --color-lazarus-critical: 239 122 106;
+  --color-lazarus-warning: 225 174 91;
+  --color-lazarus-normal: 78 191 153;
+  --color-lazarus-info: 98 195 224;
+  --color-lazarus-accent: 82 175 211;
+  --pulse-critical-start: rgba(38, 17, 20, 0.99);
+  --pulse-critical-mid: rgba(66, 25, 26, 0.99);
+  --badge-throb-shadow: 0 0 18px rgba(239, 122, 106, 0.22);
+  --live-dot-shadow-start: 0 0 0 0 rgba(78, 191, 153, 0.28);
+  --live-dot-shadow-mid: 0 0 0 8px rgba(78, 191, 153, 0);
+  --shell-flash-glow: 0 0 0 1px rgba(98, 195, 224, 0.28), 0 0 28px rgba(98, 195, 224, 0.18);
+  --critical-shell-flash-glow: 0 0 0 1px rgba(239, 122, 106, 0.32), 0 0 34px rgba(239, 122, 106, 0.2);
 }
 
 html {
   color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 body {
   font-family: 'Manrope', 'Noto Sans', system-ui, sans-serif;
@@ -65,6 +69,10 @@ body {
     radial-gradient(circle at 0% 0%, rgba(53, 156, 182, 0.16), transparent 26%),
     radial-gradient(circle at 100% 0%, rgba(203, 96, 84, 0.10), transparent 22%),
     linear-gradient(180deg, #eff7fa 0%, #ecf5f8 42%, #e6f0f4 100%);
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    background-image 220ms ease;
 }
 
 body::before,
@@ -93,6 +101,31 @@ body::after {
 
 #root {
   min-height: 100vh;
+}
+
+.dark body {
+  background-color: rgb(var(--color-lazarus-bg));
+  background-image:
+    radial-gradient(circle at 12% 0%, rgba(82, 175, 211, 0.18), transparent 24%),
+    radial-gradient(circle at 88% 8%, rgba(239, 122, 106, 0.12), transparent 22%),
+    linear-gradient(180deg, #09111a 0%, #0b141d 38%, #0a1118 100%);
+}
+
+.dark body::before {
+  background:
+    linear-gradient(rgba(124, 152, 168, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 152, 168, 0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.32), transparent 68%);
+  opacity: 0.6;
+}
+
+.dark body::after {
+  background:
+    linear-gradient(135deg, rgba(98, 195, 224, 0.1), transparent 24%),
+    radial-gradient(circle at center, rgba(148, 174, 189, 0.05) 0 1px, transparent 1px);
+  background-size: auto, 14px 14px;
+  opacity: 0.12;
 }
 
 /* ─── Mono / Data Numbers ────────────────────────────────────────── */
@@ -532,6 +565,164 @@ body::after {
       0 10px 32px rgba(209, 78, 68, 0.13);
     transform: translateY(-2px);
   }
+}
+
+/* ─── Dark Theme Refinements ─────────────────────────────────────── */
+.dark .brand-mark {
+  background: linear-gradient(145deg, rgba(16, 24, 34, 0.96), rgba(22, 33, 45, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(91, 118, 138, 0.36),
+    0 18px 40px rgba(2, 8, 15, 0.34);
+}
+
+.dark .metric-frame,
+.dark .card,
+.dark .shell-frame,
+.dark .hero-board,
+.dark .hero-board-stat,
+.dark .subcard,
+.dark .meta-pair {
+  background: linear-gradient(160deg, rgba(15, 22, 31, 0.96) 0%, rgba(19, 28, 39, 0.94) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 1px rgba(79, 104, 124, 0.32),
+    0 22px 54px rgba(3, 8, 15, 0.34);
+}
+
+.dark .metric-frame::before,
+.dark .card::before {
+  background: linear-gradient(90deg, rgba(98, 140, 164, 0.28), rgba(98, 140, 164, 0.08), transparent);
+}
+
+.dark .dossier-chip,
+.dark .utility-chip {
+  background: rgba(15, 23, 32, 0.88);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 24px rgba(2, 8, 15, 0.2);
+}
+
+.dark .dossier-divider {
+  background: linear-gradient(90deg, rgba(98, 140, 164, 0.3), rgba(98, 140, 164, 0.08), transparent);
+}
+
+.dark .badge-normal {
+  border-color: rgba(78, 191, 153, 0.26);
+  background: rgba(78, 191, 153, 0.14);
+}
+
+.dark .badge-warning {
+  border-color: rgba(225, 174, 91, 0.24);
+  background: rgba(225, 174, 91, 0.14);
+}
+
+.dark .badge-critical {
+  border-color: rgba(239, 122, 106, 0.24);
+  background: rgba(239, 122, 106, 0.14);
+}
+
+.dark .card-interactive:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(98, 195, 224, 0.18),
+    0 28px 68px rgba(2, 8, 15, 0.42);
+}
+
+.dark .card-critical {
+  box-shadow:
+    0 0 0 1px rgba(239, 122, 106, 0.18),
+    0 22px 60px rgba(82, 18, 20, 0.28);
+}
+
+.dark .alert-banner {
+  border-color: rgba(239, 122, 106, 0.2);
+  background: linear-gradient(180deg, rgba(36, 18, 22, 0.92), rgba(26, 16, 20, 0.88));
+}
+
+.dark .hero-panel {
+  background: linear-gradient(135deg, rgba(12, 18, 26, 0.98) 0%, rgba(17, 25, 35, 0.96) 42%, rgba(18, 29, 40, 0.94) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(79, 104, 124, 0.32),
+    0 30px 72px rgba(1, 6, 12, 0.42);
+}
+
+.dark .hero-panel::before {
+  background: linear-gradient(105deg, rgba(239, 122, 106, 0.12), transparent 34%, rgba(98, 195, 224, 0.16) 100%);
+}
+
+.dark .hero-panel::after {
+  background: radial-gradient(ellipse, rgba(98, 195, 224, 0.16), transparent 72%);
+}
+
+.dark .hero-panel-critical {
+  border-color: rgba(239, 122, 106, 0.28);
+  background: linear-gradient(135deg, rgba(24, 14, 17, 0.98) 0%, rgba(18, 20, 28, 0.95) 48%, rgba(13, 20, 30, 0.94) 100%);
+}
+
+.dark .shell-frame {
+  background: linear-gradient(160deg, rgba(14, 22, 31, 0.96), rgba(18, 27, 38, 0.94));
+}
+
+.dark .header-shell {
+  background: linear-gradient(180deg, rgba(10, 16, 24, 0.94), rgba(14, 21, 31, 0.92));
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.34);
+}
+
+.dark .header-plaque {
+  background: linear-gradient(160deg, rgba(14, 22, 33, 0.86), rgba(20, 30, 42, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 30px rgba(2, 8, 15, 0.28);
+}
+
+.dark .hero-board {
+  background: linear-gradient(160deg, rgba(14, 22, 31, 0.98), rgba(18, 27, 38, 0.96));
+}
+
+.dark .hero-board-stat {
+  background: linear-gradient(180deg, rgba(17, 25, 35, 0.96), rgba(21, 31, 43, 0.94));
+}
+
+.dark .hero-note {
+  background: rgba(11, 19, 28, 0.72);
+}
+
+.dark .subcard {
+  background: linear-gradient(180deg, rgba(16, 24, 34, 0.96), rgba(20, 29, 40, 0.92));
+}
+
+.dark .meta-pair {
+  background: rgba(12, 19, 28, 0.82);
+}
+
+.dark .text-clinical-gradient {
+  background: linear-gradient(135deg, #edf7fb 0%, rgb(var(--color-lazarus-info)) 46%, #9de0d1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dark .page-progress {
+  background: linear-gradient(90deg, rgba(9, 14, 20, 0.86), rgba(21, 32, 44, 0.28));
+}
+
+.dark .page-progress-bar {
+  background: linear-gradient(90deg, rgba(82, 175, 211, 0.88), rgba(98, 195, 224, 0.96), rgba(110, 221, 190, 0.84));
+  box-shadow: 0 0 20px rgba(98, 195, 224, 0.28);
+}
+
+.dark .live-vitals-card {
+  box-shadow:
+    0 0 0 1px rgba(78, 191, 153, 0.16),
+    0 12px 32px rgba(4, 22, 19, 0.28);
+}
+
+.dark .critical-vitals-card {
+  box-shadow:
+    0 0 0 1px rgba(239, 122, 106, 0.2),
+    0 12px 34px rgba(48, 14, 16, 0.32);
 }
 
 /* ─── Keyframes ──────────────────────────────────────────────────── */
