@@ -7,7 +7,7 @@ In a medical context, design isn't just about aesthetics; it's about reducing co
 ## 1. Accessibility & Inclusive Design (WCAG 2.1 AAA)
 Clinical dashboards must be universally accessible, especially under high-stress situations or long shifts.
 - **Colorblind-Safe Alerts:** Relying purely on color (`#ef4444` for Critical, `#f59e0b` for Warning) is a major risk in clinical environments. Always pair status colors with **distinct iconography** (e.g., an 🛑 Octagon/Cross for Critical alerts, a ⚠️ Triangle for Warnings, and a ✅ Circle for Normal). 
-- **Contrast Ratios:** Your dark theme (Background: `#0a0e14`, Text: `#e2e8f0`) is excellent for reducing eye strain. Ensure the contrast ratio between text and surface backgrounds (`#1a1f2e`) is at least **7:1** (WCAG AAA standard) for all critical medical data and labels.
+- **Contrast Ratios:** The light clinical palette should still maintain at least **7:1** contrast on critical text, labels, and telemetry values so the dashboard stays readable during long clinical reviews and live demos.
 - **Screen Reader Support:** Add `aria-live="assertive"` regions to your `AlertBanner` component. This ensures that when a real-time WebSocket alert is broadcasted, medical professionals using screen readers are immediately and proactively notified.
 
 ## 2. Typography & Data Presentation
@@ -26,7 +26,7 @@ A 4-panel dashboard can become visually overwhelming if every panel displays max
 
 ## 5. Design System Standardization
 - **Strict Tokenization:** In your Tailwind configuration (`tailwind.config.js`), enforce the use of your semantic colors (e.g., `bg-surface`, `text-critical`, `border-muted`) rather than raw utilities (like `bg-red-500`). This ensures that if the hospital requests a contrast tweak later, changing a single hex code instantly fixes the entire app.
-- **Component Reusability:** Define standard clinical container classes. For example, a `glass-panel` style for your cards with a slight `border-[#2d3748]`, dark surface background `#1a1f2e`, and standard padding to maintain a premium, state-of-the-art clinical aesthetic.
+- **Component Reusability:** Define standard clinical container classes. For example, use a reusable dossier-style panel with soft borders, pale surfaces, and consistent padding so the interface feels premium without drifting into a generic dark dashboard look.
 
 ---
 ### 🎯 Recommended First Step

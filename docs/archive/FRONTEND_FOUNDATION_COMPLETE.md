@@ -53,7 +53,7 @@ Accent:        #8b5cf6 (purple - interactive)
 - High contrast for clinical readability
 - Monospace fonts for precise medical data
 - Color-coded alert levels (critical, warning, normal)
-- Dark theme reduces eye strain during long shifts
+- Light clinical surfaces keep the dashboard calm and presentation-friendly
 - Professional medical aesthetic
 
 ---

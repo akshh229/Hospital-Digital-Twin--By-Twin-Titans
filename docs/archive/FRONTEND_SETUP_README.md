@@ -48,7 +48,7 @@ npm run dev
 ## 🎨 Features Included
 
 ### Clinical Dashboard Theme
-- Dark theme (#0a0e14 background)
+- Light clinical theme with soft blue-white surfaces
 - High contrast typography
 - Color-coded alerts:
   - 🔴 Red (#ef4444) - Critical
