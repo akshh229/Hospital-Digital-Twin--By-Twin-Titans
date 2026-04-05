@@ -205,13 +205,22 @@ export default function CommandCenter() {
         <ScenarioComparisonPanel comparison={overview.scenario_comparison} />
       </Reveal>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.75fr)]">
-        <div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:items-start">
+        <div className="space-y-6">
           <ICUBedHeatmap
             beds={overview.bed_heatmap}
             triageQueue={overview.triage_queue}
           />
+          <ResourceConsumptionPanel
+            cards={overview.resource_cards}
+            forecast={overview.resource_forecast}
+          />
+          <PatientFlowTimeline
+            timeline={overview.timeline}
+            replayFrames={overview.replay_frames}
+          />
         </div>
+
         <div className="space-y-6">
           <SimulationControlPanel
             simulation={simulation}
@@ -227,21 +236,6 @@ export default function CommandCenter() {
             simulation={simulation}
             isPending={control.isPending}
             onRunPlaybook={runPlaybook}
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div>
-          <ResourceConsumptionPanel
-            cards={overview.resource_cards}
-            forecast={overview.resource_forecast}
-          />
-        </div>
-        <div>
-          <PatientFlowTimeline
-            timeline={overview.timeline}
-            replayFrames={overview.replay_frames}
           />
         </div>
       </div>

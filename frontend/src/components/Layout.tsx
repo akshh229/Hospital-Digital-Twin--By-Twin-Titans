@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import AlertBanner from './AlertBanner'
 import PageProgressBar from './PageProgressBar'
 import RealtimeStatusBadge from './RealtimeStatusBadge'
+import ThemeToggle from './ThemeToggle'
 import { useHealth } from '../hooks/useHealth'
 import {
   useOperationsOverview,
@@ -67,6 +68,8 @@ export default function Layout({ children }: LayoutProps) {
                   </span>
                 </>
               )}
+
+              <ThemeToggle />
 
               <RealtimeStatusBadge
                 state={realtimeState}
