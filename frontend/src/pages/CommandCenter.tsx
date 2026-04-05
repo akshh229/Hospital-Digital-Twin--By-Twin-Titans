@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import ICUBedHeatmap from '../components/ICUBedHeatmap'
 import IncidentHandoffPanel from '../components/IncidentHandoffPanel'
 import OperationsBriefingPanel from '../components/OperationsBriefingPanel'
@@ -6,12 +7,16 @@ import PatientFlowTimeline from '../components/PatientFlowTimeline'
 import Reveal from '../components/Reveal'
 import RecommendedActionsPanel from '../components/RecommendedActionsPanel'
 import ResourceConsumptionPanel from '../components/ResourceConsumptionPanel'
+import RoomAvailabilityPanel from '../components/RoomAvailabilityPanel'
 import ScenarioComparisonPanel from '../components/ScenarioComparisonPanel'
 import ScenarioPlaybooksPanel, {
   type ScenarioPlaybook,
 } from '../components/ScenarioPlaybooksPanel'
 import SimulationControlPanel from '../components/SimulationControlPanel'
-import type { RecommendedAction } from '../types'
+import type {
+  BedAvailabilityFilter,
+  RecommendedAction,
+} from '../types'
 import {
   useOperationsOverview,
   useSimulationControl,
@@ -32,6 +37,9 @@ function toneForMetric(value: number, thresholds: [number, number]) {
 export default function CommandCenter() {
   const { data: overview, isLoading, error } = useOperationsOverview()
   const control = useSimulationControl()
+  const [availabilityFilter, setAvailabilityFilter] =
+    useState<BedAvailabilityFilter>('all')
+  const [selectedZone, setSelectedZone] = useState<string | null>(null)
 
   async function runPlaybook(playbook: ScenarioPlaybook) {
     if (overview?.simulation.is_paused) {
@@ -207,9 +215,19 @@ export default function CommandCenter() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:items-start">
         <div className="space-y-6">
+          <RoomAvailabilityPanel
+            beds={overview.bed_heatmap}
+            triageQueue={overview.triage_queue}
+            availabilityFilter={availabilityFilter}
+            selectedZone={selectedZone}
+            onAvailabilityFilterChange={setAvailabilityFilter}
+            onZoneChange={setSelectedZone}
+          />
           <ICUBedHeatmap
             beds={overview.bed_heatmap}
             triageQueue={overview.triage_queue}
+            availabilityFilter={availabilityFilter}
+            selectedZone={selectedZone}
           />
           <ResourceConsumptionPanel
             cards={overview.resource_cards}

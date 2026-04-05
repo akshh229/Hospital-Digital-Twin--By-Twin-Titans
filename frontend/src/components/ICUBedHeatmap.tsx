@@ -1,9 +1,15 @@
 import { Link } from 'react-router-dom'
-import type { BedTile, TriageQueueEntry } from '../types'
+import type {
+  BedAvailabilityFilter,
+  BedTile,
+  TriageQueueEntry,
+} from '../types'
 
 interface ICUBedHeatmapProps {
   beds: BedTile[]
   triageQueue: TriageQueueEntry[]
+  availabilityFilter: BedAvailabilityFilter
+  selectedZone: string | null
 }
 
 function toneForBed(tile: BedTile) {
@@ -61,8 +67,21 @@ function RiskReasonTags({ reasons }: { reasons: string[] }) {
 export default function ICUBedHeatmap({
   beds,
   triageQueue,
+  availabilityFilter,
+  selectedZone,
 }: ICUBedHeatmapProps) {
   const occupiedBeds = beds.filter((bed) => bed.status === 'occupied').length
+  const filteredBeds = beds.filter((bed) => {
+    if (availabilityFilter !== 'all' && bed.status !== availabilityFilter) {
+      return false
+    }
+
+    if (selectedZone && bed.zone !== selectedZone) {
+      return false
+    }
+
+    return true
+  })
 
   return (
     <section className="card space-y-5">
@@ -85,94 +104,101 @@ export default function ICUBedHeatmap({
         Click an occupied bed to drill into the patient timeline.
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {beds.map((tile) => {
-          const content = (
-            <div
-              className={`rounded-[1.4rem] border p-4 transition-transform duration-300 hover:-translate-y-0.5 ${toneForBed(tile)}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-lazarus-muted">
-                    {tile.zone}
-                  </p>
-                  <h3 className="mt-2 font-mono text-lg font-semibold text-lazarus-text">
-                    {tile.bed_id}
-                  </h3>
-                </div>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
-                    tile.status === 'occupied'
-                      ? 'bg-lazarus-surface text-lazarus-text'
-                      : 'bg-lazarus-normal/12 text-lazarus-normal'
-                  }`}
-                >
-                  {tile.status === 'occupied' ? tile.patient?.risk_label : 'Ready'}
-                </span>
-              </div>
-
-              {tile.patient ? (
-                <div className="mt-4 space-y-3">
+      {filteredBeds.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filteredBeds.map((tile) => {
+            const content = (
+              <div
+                className={`rounded-[1.4rem] border p-4 transition-transform duration-300 hover:-translate-y-0.5 ${toneForBed(tile)}`}
+              >
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-lazarus-text">
-                      {tile.patient.patient_name || `Patient ${tile.patient.patient_raw_id}`}
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-lazarus-muted">
+                      {tile.zone}
                     </p>
-                    <p className="mt-1 text-xs leading-5 text-lazarus-muted">
+                    <h3 className="mt-2 font-mono text-lg font-semibold text-lazarus-text">
+                      {tile.bed_id}
+                    </h3>
+                  </div>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                      tile.status === 'occupied'
+                        ? 'bg-lazarus-surface text-lazarus-text'
+                        : 'bg-lazarus-normal/12 text-lazarus-normal'
+                    }`}
+                  >
+                    {tile.status === 'occupied' ? tile.patient?.risk_label : 'Ready'}
+                  </span>
+                </div>
+
+                {tile.patient ? (
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <p className="text-sm font-semibold text-lazarus-text">
+                        {tile.patient.patient_name || `Patient ${tile.patient.patient_raw_id}`}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-lazarus-muted">
+                        {tile.assignment_reason}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-2xl bg-lazarus-surface/80 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lazarus-muted">
+                          Risk
+                        </p>
+                        <p className="mt-1 font-mono text-base font-semibold text-lazarus-text">
+                          {tile.patient.risk_score}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-lazarus-surface/80 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lazarus-muted">
+                          BPM
+                        </p>
+                        <p className="mt-1 font-mono text-base font-semibold text-lazarus-text">
+                          {tile.patient.last_bpm ?? '--'}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-lazarus-surface/80 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lazarus-muted">
+                          SpO2
+                        </p>
+                        <p className="mt-1 font-mono text-base font-semibold text-lazarus-text">
+                          {tile.patient.last_oxygen != null ? `${tile.patient.last_oxygen}%` : '--'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <RiskReasonTags reasons={tile.patient.risk_reasons} />
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-[1.25rem] border border-dashed border-lazarus-normal/30 bg-lazarus-surface/70 px-4 py-6">
+                    <p className="text-sm font-semibold text-lazarus-normal">Bed standing by</p>
+                    <p className="mt-2 text-xs leading-5 text-lazarus-muted">
                       {tile.assignment_reason}
                     </p>
                   </div>
+                )}
+              </div>
+            )
 
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded-2xl bg-lazarus-surface/80 px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lazarus-muted">
-                        Risk
-                      </p>
-                      <p className="mt-1 font-mono text-base font-semibold text-lazarus-text">
-                        {tile.patient.risk_score}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-lazarus-surface/80 px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lazarus-muted">
-                        BPM
-                      </p>
-                      <p className="mt-1 font-mono text-base font-semibold text-lazarus-text">
-                        {tile.patient.last_bpm ?? '--'}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-lazarus-surface/80 px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lazarus-muted">
-                        SpO2
-                      </p>
-                      <p className="mt-1 font-mono text-base font-semibold text-lazarus-text">
-                        {tile.patient.last_oxygen != null ? `${tile.patient.last_oxygen}%` : '--'}
-                      </p>
-                    </div>
-                  </div>
+            if (!tile.patient) {
+              return <div key={tile.bed_id}>{content}</div>
+            }
 
-                  <RiskReasonTags reasons={tile.patient.risk_reasons} />
-                </div>
-              ) : (
-                <div className="mt-4 rounded-[1.25rem] border border-dashed border-lazarus-normal/30 bg-lazarus-surface/70 px-4 py-6">
-                  <p className="text-sm font-semibold text-lazarus-normal">Bed standing by</p>
-                  <p className="mt-2 text-xs leading-5 text-lazarus-muted">
-                    {tile.assignment_reason}
-                  </p>
-                </div>
-              )}
-            </div>
-          )
-
-          if (!tile.patient) {
-            return <div key={tile.bed_id}>{content}</div>
-          }
-
-          return (
-            <Link key={tile.bed_id} to={`/patient/${tile.patient.patient_id}`} className="block">
-              {content}
-            </Link>
-          )
-        })}
-      </div>
+            return (
+              <Link key={tile.bed_id} to={`/patient/${tile.patient.patient_id}`} className="block">
+                {content}
+              </Link>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="rounded-[1.35rem] border border-lazarus-border/70 bg-lazarus-surface/70 px-4 py-5 text-sm text-lazarus-muted">
+          No beds match the current room availability filter. Switch the room view back to
+          all beds or choose another zone to keep routing.
+        </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">

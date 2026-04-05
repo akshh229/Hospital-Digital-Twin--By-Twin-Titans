@@ -160,6 +160,8 @@ export interface BedTile {
   patient: BedPatient | null
 }
 
+export type BedAvailabilityFilter = 'all' | 'available' | 'occupied'
+
 export interface TriageQueueEntry {
   patient_id: string
   patient_name: string | null
