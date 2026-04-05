@@ -27,16 +27,13 @@ function resolveInitialTheme(): AppTheme {
   }
 
   const storedTheme = window.localStorage.getItem(STORAGE_KEY)
-  if (storedTheme === 'clinical-light' || storedTheme === 'navy') {
+  if (storedTheme === 'clinical-light') {
     applyTheme(storedTheme)
     return storedTheme
   }
 
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'navy'
-    : 'clinical-light'
-  applyTheme(systemTheme)
-  return systemTheme
+  applyTheme('clinical-light')
+  return 'clinical-light'
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
