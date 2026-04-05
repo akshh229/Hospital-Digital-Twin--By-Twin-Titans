@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const apiProxyTarget = process.env.VITE_PROXY_TARGET?.trim() || 'http://localhost:8000'
+const wsProxyTarget =
+  process.env.VITE_WS_PROXY_TARGET?.trim() ||
+  apiProxyTarget.replace(/^http/i, (match) => (match.toLowerCase() === 'https' ? 'wss' : 'ws'))
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,15 +13,15 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: apiProxyTarget,
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: wsProxyTarget,
         ws: true,
       },
       '/health': {
-        target: 'http://localhost:8000',
+        target: apiProxyTarget,
       },
     },
   },

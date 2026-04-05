@@ -206,13 +206,13 @@ export default function CommandCenter() {
       </Reveal>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.75fr)]">
-        <Reveal delay={140}>
+        <div>
           <ICUBedHeatmap
             beds={overview.bed_heatmap}
             triageQueue={overview.triage_queue}
           />
-        </Reveal>
-        <Reveal delay={190} className="space-y-6">
+        </div>
+        <div className="space-y-6">
           <SimulationControlPanel
             simulation={simulation}
             isPending={control.isPending}
@@ -228,22 +228,22 @@ export default function CommandCenter() {
             isPending={control.isPending}
             onRunPlaybook={runPlaybook}
           />
-        </Reveal>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <Reveal delay={170}>
+        <div>
           <ResourceConsumptionPanel
             cards={overview.resource_cards}
             forecast={overview.resource_forecast}
           />
-        </Reveal>
-        <Reveal delay={220}>
+        </div>
+        <div>
           <PatientFlowTimeline
             timeline={overview.timeline}
             replayFrames={overview.replay_frames}
           />
-        </Reveal>
+        </div>
       </div>
     </div>
   )
