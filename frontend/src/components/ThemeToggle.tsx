@@ -9,7 +9,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="group relative flex h-10 w-10 items-center justify-center rounded-full border border-lazarus-border/70 bg-lazarus-surface/82 text-lazarus-text shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-lazarus-info/50 hover:text-lazarus-info hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lazarus-info/35 focus-visible:ring-offset-2 focus-visible:ring-offset-lazarus-bg"
+      className="group relative flex h-11 w-11 items-center justify-center rounded-full border border-lazarus-border/70 bg-lazarus-surface/82 text-lazarus-text shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-lazarus-info/50 hover:text-lazarus-info hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lazarus-info/35 focus-visible:ring-offset-2 focus-visible:ring-offset-lazarus-bg"
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
       aria-pressed={isDark}
       title={`Switch to ${isDark ? 'light' : 'dark'} mode`}

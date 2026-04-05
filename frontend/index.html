@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#eef7fa" />
+    <script>
+      ;(() => {
+        const savedTheme = localStorage.getItem('lazarus-theme')
+        const theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : 'light'
+        const root = document.documentElement
+        root.classList.add(theme)
+        root.style.colorScheme = theme
+
+        const themeColor = theme === 'dark' ? '#09111a' : '#eef7fa'
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute('content', themeColor)
+      })()
+    </script>
     <title>St. Jude ICU Digital Twin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
