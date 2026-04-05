@@ -3,6 +3,7 @@ import IncidentHandoffPanel from '../components/IncidentHandoffPanel'
 import OperationsBriefingPanel from '../components/OperationsBriefingPanel'
 import OperatorActivityPanel from '../components/OperatorActivityPanel'
 import PatientFlowTimeline from '../components/PatientFlowTimeline'
+import Reveal from '../components/Reveal'
 import RecommendedActionsPanel from '../components/RecommendedActionsPanel'
 import ResourceConsumptionPanel from '../components/ResourceConsumptionPanel'
 import ScenarioComparisonPanel from '../components/ScenarioComparisonPanel'
@@ -94,18 +95,21 @@ export default function CommandCenter() {
 
   return (
     <div className="page-entrance space-y-6">
-      <section
+      <Reveal
+        as="section"
         className={`hero-panel ${
           summary.overflow_patients > 0 || summary.active_alerts > 0
             ? 'hero-panel-critical'
             : ''
         }`}
+        delay={40}
       >
         <div className="relative z-10 grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] xl:items-end">
           <div className="max-w-3xl">
             <p className="display-kicker">Operational command dashboard</p>
-            <h1 className="display-title mt-3">
-              St. Jude ICU Digital Twin for high-pressure logistics and live crisis response.
+            <h1 className="display-title headline-reveal mt-3">
+              St. Jude ICU <span className="text-clinical-gradient">Digital Twin</span> for
+              high-pressure logistics and live crisis response.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-lazarus-muted">
               This command surface simulates bed routing, tracks critical resource burn,
@@ -179,28 +183,36 @@ export default function CommandCenter() {
             </div>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <OperationsBriefingPanel
-          briefing={overview.briefing}
-          trust={overview.trust}
-        />
-        <RecommendedActionsPanel
-          actions={overview.recommended_actions}
-          isPending={control.isPending}
-          onExecuteAction={executeRecommendation}
-        />
+        <Reveal delay={90}>
+          <OperationsBriefingPanel
+            briefing={overview.briefing}
+            trust={overview.trust}
+          />
+        </Reveal>
+        <Reveal delay={150}>
+          <RecommendedActionsPanel
+            actions={overview.recommended_actions}
+            isPending={control.isPending}
+            onExecuteAction={executeRecommendation}
+          />
+        </Reveal>
       </div>
 
-      <ScenarioComparisonPanel comparison={overview.scenario_comparison} />
+      <Reveal delay={120}>
+        <ScenarioComparisonPanel comparison={overview.scenario_comparison} />
+      </Reveal>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.75fr)]">
-        <ICUBedHeatmap
-          beds={overview.bed_heatmap}
-          triageQueue={overview.triage_queue}
-        />
-        <div className="space-y-6">
+        <Reveal delay={140}>
+          <ICUBedHeatmap
+            beds={overview.bed_heatmap}
+            triageQueue={overview.triage_queue}
+          />
+        </Reveal>
+        <Reveal delay={190} className="space-y-6">
           <SimulationControlPanel
             simulation={simulation}
             isPending={control.isPending}
@@ -216,18 +228,22 @@ export default function CommandCenter() {
             isPending={control.isPending}
             onRunPlaybook={runPlaybook}
           />
-        </div>
+        </Reveal>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <ResourceConsumptionPanel
-          cards={overview.resource_cards}
-          forecast={overview.resource_forecast}
-        />
-        <PatientFlowTimeline
-          timeline={overview.timeline}
-          replayFrames={overview.replay_frames}
-        />
+        <Reveal delay={170}>
+          <ResourceConsumptionPanel
+            cards={overview.resource_cards}
+            forecast={overview.resource_forecast}
+          />
+        </Reveal>
+        <Reveal delay={220}>
+          <PatientFlowTimeline
+            timeline={overview.timeline}
+            replayFrames={overview.replay_frames}
+          />
+        </Reveal>
       </div>
     </div>
   )

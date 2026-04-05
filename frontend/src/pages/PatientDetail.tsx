@@ -6,6 +6,7 @@ import { usePrescriptions } from '../hooks/usePrescriptions'
 import { usePatientRealtime } from '../hooks/usePatientRealtime'
 import PatientAlertPanel from '../components/PatientAlertPanel'
 import PatientCommandSnapshot from '../components/PatientCommandSnapshot'
+import Reveal from '../components/Reveal'
 import RealtimeStatusBadge from '../components/RealtimeStatusBadge'
 import TelemetrySimulatorPanel from '../components/TelemetrySimulatorPanel'
 import VitalsChart from '../components/VitalsChart'
@@ -57,7 +58,8 @@ export default function PatientDetail() {
         &larr; Back to Command Center
       </Link>
 
-      <div
+      <Reveal
+        as="section"
         className={`hero-panel ${
           flashTone === 'critical'
             ? 'critical-shell-flash'
@@ -65,12 +67,13 @@ export default function PatientDetail() {
               ? 'live-shell-flash'
               : ''
         } ${hasCriticalBpm ? 'hero-panel-critical animate-pulse-critical-subtle' : ''}`}
+        delay={40}
       >
         <div className="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0 flex-1 max-w-3xl">
             <p className="display-kicker">Patient drill-down</p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-[2.6rem] leading-none tracking-[-0.04em] text-lazarus-text sm:text-[3.4rem]">
+              <h1 className="headline-reveal font-display text-[2.6rem] leading-none tracking-[-0.04em] text-lazarus-text sm:text-[3.4rem]">
                 {patient.name || `Patient ${patient.patient_raw_id}`}
               </h1>
               {patient.has_active_alert && <span className="badge-critical">Critical</span>}
@@ -155,18 +158,28 @@ export default function PatientDetail() {
             </div>
           </div>
         </div>
-      </div>
+      </Reveal>
 
-      {patientId && <PatientAlertPanel patientId={patientId} />}
-      {patientId && <PatientCommandSnapshot patientId={patientId} />}
       {patientId && (
-        <TelemetrySimulatorPanel
-          patientId={patientId}
-          connectionState={connectionState}
-        />
+        <Reveal delay={90}>
+          <PatientAlertPanel patientId={patientId} />
+        </Reveal>
+      )}
+      {patientId && (
+        <Reveal delay={130}>
+          <PatientCommandSnapshot patientId={patientId} />
+        </Reveal>
+      )}
+      {patientId && (
+        <Reveal delay={170}>
+          <TelemetrySimulatorPanel
+            patientId={patientId}
+            connectionState={connectionState}
+          />
+        </Reveal>
       )}
 
-      <div className="mb-6">
+      <Reveal delay={210} className="mb-6">
         {vitalsLoading ? (
           <div className="card text-lazarus-muted">Loading vitals...</div>
         ) : vitals && vitals.data.length > 0 ? (
@@ -184,13 +197,15 @@ export default function PatientDetail() {
         ) : (
           <div className="card text-lazarus-muted">No vitals data available for this patient.</div>
         )}
-      </div>
+      </Reveal>
 
-      {rxLoading ? (
-        <div className="card text-lazarus-muted">Loading prescriptions...</div>
-      ) : (
-        <PharmacyTable prescriptions={prescriptions || []} />
-      )}
+      <Reveal delay={240}>
+        {rxLoading ? (
+          <div className="card text-lazarus-muted">Loading prescriptions...</div>
+        ) : (
+          <PharmacyTable prescriptions={prescriptions || []} />
+        )}
+      </Reveal>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { usePatients } from '../hooks/usePatients'
 import PatientCard from '../components/PatientCard'
+import Reveal from '../components/Reveal'
 
 export default function Dashboard() {
   const { data: patients, isLoading, error } = usePatients()
@@ -50,11 +51,14 @@ export default function Dashboard() {
 
   return (
     <div className="page-entrance space-y-10">
-      <section className="hero-panel">
+      <Reveal as="section" className="hero-panel" delay={40}>
         <div className="relative z-10 grid gap-8 xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] xl:items-end">
           <div className="max-w-3xl">
             <p className="display-kicker">Live census</p>
-            <h1 className="display-title mt-3">Recovered telemetry across the active clinical census.</h1>
+            <h1 className="display-title headline-reveal mt-3">
+              Recovered telemetry across the active{' '}
+              <span className="text-clinical-gradient">clinical census</span>.
+            </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-lazarus-muted">
               Lazarus tracks recovered patient records, reconciles identity collisions,
               and surfaces unstable telemetry with a calmer, more premium clinical
@@ -100,10 +104,10 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {criticalPatients.length > 0 && (
-        <section className="space-y-4">
+        <Reveal as="section" className="space-y-4" delay={110}>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="section-label text-lazarus-critical/85">Immediate attention</p>
@@ -121,10 +125,10 @@ export default function Dashboard() {
               <PatientCard key={patient.patient_id} patient={patient} index={index} />
             ))}
           </div>
-        </section>
+        </Reveal>
       )}
 
-      <section className="space-y-4">
+      <Reveal as="section" className="space-y-4" delay={160}>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="section-label">Recovered census</p>
@@ -146,7 +150,7 @@ export default function Dashboard() {
             />
           ))}
         </div>
-      </section>
+      </Reveal>
     </div>
   )
 }

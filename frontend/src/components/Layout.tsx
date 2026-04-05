@@ -1,8 +1,8 @@
 import { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import AlertBanner from './AlertBanner'
+import PageProgressBar from './PageProgressBar'
 import RealtimeStatusBadge from './RealtimeStatusBadge'
-import ThemeToggle from './ThemeToggle'
 import { useHealth } from '../hooks/useHealth'
 import {
   useOperationsOverview,
@@ -23,61 +23,67 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-lazarus-bg">
-      <header className="border-b border-lazarus-border/80 bg-lazarus-surface/88 px-4 py-4 backdrop-blur-xl sm:px-6">
-        <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <Link to="/" className="flex min-w-0 items-center gap-4">
-              <div className="brand-mark flex h-12 w-12 items-center justify-center rounded-[1.15rem] border border-lazarus-border">
-                <span className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-lazarus-text">
+      <PageProgressBar />
+      <header className="sticky top-0 z-40 px-4 pt-0 sm:px-6">
+        <div className="header-shell mx-auto max-w-[84rem] backdrop-blur-xl">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.9fr)_auto] xl:items-center">
+            <Link to="/" className="group flex min-w-0 items-center gap-3.5">
+              <div className="brand-mark flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.35rem] border border-lazarus-border/70 transition-shadow duration-200 group-hover:shadow-md">
+                <span className="font-display text-xs font-bold uppercase tracking-[0.22em] text-lazarus-text">
                   ICU
                 </span>
               </div>
               <div className="min-w-0">
                 <p className="display-kicker">Hospital digital twin</p>
-                <h1 className="font-display text-[2rem] leading-none tracking-[-0.03em] text-lazarus-text">
+                <h1 className="font-display text-[1.75rem] font-bold leading-none tracking-[-0.05em] text-lazarus-text">
                   St. Jude ICU
                 </h1>
-                <p className="mt-1 text-sm text-lazarus-muted">
+                <p className="mt-1 text-[11px] uppercase tracking-[0.19em] text-lazarus-muted/72">
                   Command center and live crisis simulation
                 </p>
               </div>
             </Link>
 
-            <div className="hidden lg:block">
-              <p className="text-sm font-medium text-lazarus-text/88">
+            <div className="header-plaque hidden xl:block">
+              <p className="text-sm font-semibold tracking-[-0.01em] text-lazarus-text/86">
                 St. Jude&apos;s Research Hospital
               </p>
-              <p className="mt-1 text-xs uppercase tracking-[0.24em] text-lazarus-muted/70">
+              <p className="mt-2 text-[11px] uppercase tracking-[0.28em] text-lazarus-muted/68">
                 Critical care logistics and ward allocation twin
               </p>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-            {overview && (
-              <>
-                <span className="dossier-chip">
-                  Occupancy {overview.summary.icu_occupied}/{overview.summary.icu_capacity}
-                </span>
-                <span className="dossier-chip">Overflow {overview.summary.overflow_patients}</span>
-                <span className="dossier-chip">Alerts {overview.summary.active_alerts}</span>
-              </>
-            )}
-            <ThemeToggle />
-            <RealtimeStatusBadge
-              state={realtimeState}
-              retryAttempt={realtimeRetryAttempt}
-              compact
-            />
-            <div className="inline-flex items-center gap-2 rounded-full border border-lazarus-border bg-lazarus-surface/92 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-              <div
-                className={`h-2.5 w-2.5 rounded-full ${statusTone} ${isError ? '' : 'animate-pulse'}`}
-                aria-hidden="true"
-              />
-              <span className="text-xs font-semibold text-lazarus-text">{systemStatus}</span>
-              {health?.version && (
-                <span className="font-mono text-[11px] text-lazarus-muted">v{health.version}</span>
+            <div className="flex flex-wrap items-center justify-start gap-2.5 xl:justify-end">
+              {overview && (
+                <>
+                  <span className="utility-chip">
+                    Occupancy {overview.summary.icu_occupied}/{overview.summary.icu_capacity}
+                  </span>
+                  <span className="utility-chip hidden sm:inline-flex">
+                    Overflow {overview.summary.overflow_patients}
+                  </span>
+                  <span className="utility-chip hidden sm:inline-flex">
+                    Alerts {overview.summary.active_alerts}
+                  </span>
+                </>
               )}
+
+              <RealtimeStatusBadge
+                state={realtimeState}
+                retryAttempt={realtimeRetryAttempt}
+                compact
+              />
+
+              <div className="utility-chip normal-case tracking-[0.08em]">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${statusTone} ${isError ? '' : 'motion-dot-live'}`}
+                  aria-hidden="true"
+                />
+                <span>{systemStatus}</span>
+                {health?.version && (
+                  <span className="font-mono text-[10px] text-lazarus-muted/72">v{health.version}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -85,7 +91,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <AlertBanner />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
+      <main className="mx-auto max-w-[84rem] px-4 py-8 sm:px-6 lg:py-10">
         {children}
       </main>
     </div>
